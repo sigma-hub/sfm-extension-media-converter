@@ -1,0 +1,97 @@
+{
+  "$schema": "https://raw.githubusercontent.com/aleksey-hoffman/sigma-file-manager/v2/src/modules/extensions/sdk/manifest.schema.json",
+  "id": "sigma.media-converter",
+  "name": "Media Converter",
+  "version": "1.0.0",
+  "publisher": {
+    "name": "sigma-hub",
+    "url": "https://github.com/sigma-hub"
+  },
+  "repository": "https://github.com/sigma-hub/sfm-extension-media-converter",
+  "license": "MIT",
+  "categories": [
+    "Media"
+  ],
+  "tags": [
+    "video",
+    "image",
+    "convert",
+    "ffmpeg",
+    "gif"
+  ],
+  "type": "api",
+  "main": "index.js",
+  "permissions": [
+    "contextMenu",
+    "commands",
+    "notifications",
+    "fs.read",
+    "fs.write",
+    "shell"
+  ],
+  "activationEvents": [
+    "onInstall",
+    "onUninstall",
+    "onStartup",
+    "onUpdate",
+    "onEnable",
+    "onDisable",
+    "onCommand:sigma.media-converter.convert"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "Media Converter Settings",
+      "properties": {
+        "autoUpdateBinary": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically check for and download FFmpeg updates on app startup"
+        }
+      }
+    },
+    "commands": [
+      {
+        "id": "convert",
+        "title": "Convert Media",
+        "description": "Convert videos and images to other formats using FFmpeg"
+      }
+    ],
+    "contextMenu": [
+      {
+        "id": "convert",
+        "title": "Convert",
+        "icon": "RefreshCw",
+        "group": "extensions",
+        "order": 1,
+        "when": {
+          "entryType": "file",
+          "fileExtensions": [
+            "mp4",
+            "mkv",
+            "webm",
+            "avi",
+            "mov",
+            "wmv",
+            "flv",
+            "ts",
+            "mts",
+            "m4v",
+            "3gp",
+            "png",
+            "jpg",
+            "jpeg",
+            "webp",
+            "bmp",
+            "tiff",
+            "tif",
+            "avif",
+            "gif"
+          ]
+        }
+      }
+    ]
+  },
+  "engines": {
+    "sigmaFileManager": ">=2.0.0"
+  }
+}
