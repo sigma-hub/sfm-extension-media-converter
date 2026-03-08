@@ -1,4 +1,9 @@
 // @ts-check
+
+/**
+ * @typedef {import('@sigma-file-manager/api').ExtensionActivationContext} ExtensionActivationContext
+ */
+
 const FFMPEG_BINARY_ID = 'ffmpeg';
 let cachedFfmpegBinaryPath = null;
 let cachedFfprobeBinaryPath = null;
@@ -990,6 +995,9 @@ async function handleUninstallActivation() {
   cachedFfprobeBinaryPath = null;
 }
 
+/**
+ * @param {ExtensionActivationContext} context
+ */
 async function activate(context) {
   sigma.commands.registerCommand(
     { id: 'convert', title: 'Convert selected media files' },
