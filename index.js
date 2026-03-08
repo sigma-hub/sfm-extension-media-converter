@@ -11,83 +11,107 @@ let cachedFfprobeBinaryPath = null;
 const VIDEO_EXTENSIONS = ['mp4', 'mkv', 'webm', 'avi', 'mov', 'wmv', 'flv', 'ts', 'mts', 'm4v', '3gp'];
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tiff', 'tif', 'avif', 'gif'];
 
-const VIDEO_OUTPUT_FORMATS = [
-  { value: 'mp4', label: 'MP4' },
-  { value: 'mkv', label: 'MKV' },
-  { value: 'webm', label: 'WebM' },
-  { value: 'avi', label: 'AVI' },
-  { value: 'mov', label: 'MOV' },
-  { value: 'gif', label: 'GIF' },
-];
+function getT() {
+  return (key, params) => sigma?.i18n?.extensionT?.(key, params) ?? key;
+}
 
-const VIDEO_CODEC_MODES = [
-  { value: 'auto', label: 'Auto (re-encode)' },
-  { value: 'copy', label: 'Copy (fast, no quality loss)' },
-];
+function getVideoOutputFormats(t) {
+  return [
+    { value: 'mp4', label: t('formatMp4') },
+    { value: 'mkv', label: t('formatMkv') },
+    { value: 'webm', label: t('formatWebm') },
+    { value: 'avi', label: t('formatAvi') },
+    { value: 'mov', label: t('formatMov') },
+    { value: 'gif', label: t('formatGif') },
+  ];
+}
 
-const VIDEO_QUALITY_OPTIONS = [
-  { value: '18', label: 'High (CRF 18)' },
-  { value: '23', label: 'Medium (CRF 23)' },
-  { value: '28', label: 'Low (CRF 28)' },
-  { value: '0', label: 'Lossless (CRF 0)' },
-];
+function getVideoCodecModes(t) {
+  return [
+    { value: 'auto', label: t('autoCopy') },
+    { value: 'copy', label: t('copy') },
+  ];
+}
 
-const VIDEO_FRAMERATE_OPTIONS = [
-  { value: 'original', label: 'Keep original' },
-  { value: '60', label: '60 fps' },
-  { value: '30', label: '30 fps' },
-  { value: '24', label: '24 fps' },
-  { value: '15', label: '15 fps' },
-  { value: '10', label: '10 fps' },
-];
+function getVideoQualityOptions(t) {
+  return [
+    { value: '18', label: t('highCrf18') },
+    { value: '23', label: t('mediumCrf23') },
+    { value: '28', label: t('lowCrf28') },
+    { value: '0', label: t('lossless') },
+  ];
+}
 
-const VIDEO_RESOLUTION_OPTIONS = [
-  { value: 'original', label: 'Keep original' },
-  { value: '1080', label: '1080p' },
-  { value: '720', label: '720p' },
-  { value: '480', label: '480p' },
-  { value: '360', label: '360p' },
-];
+function getVideoFramerateOptions(t) {
+  return [
+    { value: 'original', label: t('keepOriginal') },
+    { value: '60', label: t('fps60') },
+    { value: '30', label: t('fps30') },
+    { value: '24', label: t('fps24') },
+    { value: '15', label: t('fps15') },
+    { value: '10', label: t('fps10') },
+  ];
+}
 
-const VIDEO_AUDIO_OPTIONS = [
-  { value: 'keep', label: 'Keep audio' },
-  { value: 'remove', label: 'Remove audio' },
-  { value: 'copy', label: 'Copy audio stream' },
-];
+function getVideoResolutionOptions(t) {
+  return [
+    { value: 'original', label: t('keepOriginal') },
+    { value: '1080', label: t('res1080p') },
+    { value: '720', label: t('res720p') },
+    { value: '480', label: t('res480p') },
+    { value: '360', label: t('res360p') },
+  ];
+}
 
-const GIF_WIDTH_OPTIONS = [
-  { value: 'original', label: 'Keep original' },
-  { value: '640', label: '640px' },
-  { value: '480', label: '480px' },
-  { value: '320', label: '320px' },
-  { value: '240', label: '240px' },
-];
+function getVideoAudioOptions(t) {
+  return [
+    { value: 'keep', label: t('keepAudio') },
+    { value: 'remove', label: t('removeAudio') },
+    { value: 'copy', label: t('copyAudio') },
+  ];
+}
 
-const IMAGE_OUTPUT_FORMATS = [
-  { value: 'png', label: 'PNG' },
-  { value: 'jpg', label: 'JPG' },
-  { value: 'webp', label: 'WebP' },
-  { value: 'avif', label: 'AVIF' },
-  { value: 'bmp', label: 'BMP' },
-  { value: 'tiff', label: 'TIFF' },
-];
+function getGifWidthOptions(t) {
+  return [
+    { value: 'original', label: t('keepOriginal') },
+    { value: '640', label: t('width640') },
+    { value: '480', label: t('width480') },
+    { value: '320', label: t('width320') },
+    { value: '240', label: t('width240') },
+  ];
+}
 
-const IMAGE_QUALITY_OPTIONS = [
-  { value: '100', label: 'Highest (100)' },
-  { value: '90', label: 'High (90)' },
-  { value: '75', label: 'Medium (75)' },
-  { value: '50', label: 'Low (50)' },
-];
+function getImageOutputFormats(t) {
+  return [
+    { value: 'png', label: t('formatPng') },
+    { value: 'jpg', label: t('formatJpg') },
+    { value: 'webp', label: t('formatWebp') },
+    { value: 'avif', label: t('formatAvif') },
+    { value: 'bmp', label: t('formatBmp') },
+    { value: 'tiff', label: t('formatTiff') },
+  ];
+}
 
-const IMAGE_RESIZE_OPTIONS = [
-  { value: 'original', label: 'Keep original' },
-  { value: '75%', label: '75%' },
-  { value: '50%', label: '50%' },
-  { value: '25%', label: '25%' },
-  { value: '1920', label: '1920px wide' },
-  { value: '1280', label: '1280px wide' },
-  { value: '800', label: '800px wide' },
-];
+function getImageQualityOptions(t) {
+  return [
+    { value: '100', label: t('highest100') },
+    { value: '90', label: t('high90') },
+    { value: '75', label: t('medium75') },
+    { value: '50', label: t('low50') },
+  ];
+}
+
+function getImageResizeOptions(t) {
+  return [
+    { value: 'original', label: t('keepOriginal') },
+    { value: '75%', label: t('scale75') },
+    { value: '50%', label: t('scale50') },
+    { value: '25%', label: t('scale25') },
+    { value: '1920', label: t('width1920') },
+    { value: '1280', label: t('width1280') },
+    { value: '800', label: t('width800') },
+  ];
+}
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -450,43 +474,42 @@ function buildImageArgs(inputPath, outputPath, options) {
 
 // --- Modal creation ---
 
-function buildSummaryText(videoFiles, imageFiles) {
+function buildSummaryText(videoFiles, imageFiles, t) {
   const hasVideos = videoFiles.length > 0;
   const hasImages = imageFiles.length > 0;
 
   if (hasVideos && hasImages) {
-    const videoPart = videoFiles.length === 1 ? '1 video' : `${videoFiles.length} videos`;
-    const imagePart = imageFiles.length === 1 ? '1 image' : `${imageFiles.length} images`;
+    const videoPart = videoFiles.length === 1 ? t('oneVideo') : t('nVideos', { n: videoFiles.length });
+    const imagePart = imageFiles.length === 1 ? t('oneImage') : t('nImages', { n: imageFiles.length });
     return `${videoPart}, ${imagePart}`;
   }
 
   const files = hasVideos ? videoFiles : imageFiles;
-  const typeLabel = hasVideos ? 'video' : 'image';
 
   if (files.length === 1) {
     return files[0].name;
   }
 
   const remaining = files.length - 1;
-  const moreLabel = remaining === 1
-    ? `and 1 more ${typeLabel}`
-    : `and ${remaining} more ${typeLabel}s`;
+  const moreLabel = hasVideos
+    ? (remaining === 1 ? t('andOneMoreVideo') : t('andNMoreVideos', { n: remaining }))
+    : (remaining === 1 ? t('andOneMoreImage') : t('andNMoreImages', { n: remaining }));
   return `${files[0].name} ${moreLabel}`;
 }
 
-function buildVideoFormatContent(videoFormat, videoFiles, imageFiles) {
+function buildVideoFormatContent(videoFormat, videoFiles, imageFiles, t) {
   const hasImages = imageFiles.length > 0;
   const content = [];
 
   if (hasImages) {
-    content.push(sigma.ui.text(`Video files (${videoFiles.length})`));
+    content.push(sigma.ui.text(t('videoFiles', { count: videoFiles.length })));
   }
 
   content.push(
     sigma.ui.select({
       id: 'videoFormat',
-      label: 'Output format',
-      options: VIDEO_OUTPUT_FORMATS,
+      label: t('outputFormat'),
+      options: getVideoOutputFormats(t),
       value: videoFormat,
     })
   );
@@ -495,23 +518,23 @@ function buildVideoFormatContent(videoFormat, videoFiles, imageFiles) {
     content.push(
       sigma.ui.select({
         id: 'videoFramerate',
-        label: 'Framerate',
-        options: VIDEO_FRAMERATE_OPTIONS,
+        label: t('framerate'),
+        options: getVideoFramerateOptions(t),
         value: 'original',
       })
     );
     content.push(
       sigma.ui.select({
         id: 'gifWidth',
-        label: 'GIF width',
-        options: GIF_WIDTH_OPTIONS,
+        label: t('gifWidth'),
+        options: getGifWidthOptions(t),
         value: 'original',
       })
     );
     content.push(
       sigma.ui.checkbox({
         id: 'gifHighQuality',
-        label: 'High quality GIF palette',
+        label: t('gifHighQuality'),
         checked: true,
       })
     );
@@ -519,40 +542,40 @@ function buildVideoFormatContent(videoFormat, videoFiles, imageFiles) {
     content.push(
       sigma.ui.select({
         id: 'videoCodecMode',
-        label: 'Codec mode',
-        options: VIDEO_CODEC_MODES,
+        label: t('codecMode'),
+        options: getVideoCodecModes(t),
         value: 'auto',
       })
     );
     content.push(
       sigma.ui.select({
         id: 'videoQuality',
-        label: 'Video quality',
-        options: VIDEO_QUALITY_OPTIONS,
+        label: t('videoQuality'),
+        options: getVideoQualityOptions(t),
         value: '23',
       })
     );
     content.push(
       sigma.ui.select({
         id: 'videoFramerate',
-        label: 'Framerate',
-        options: VIDEO_FRAMERATE_OPTIONS,
+        label: t('framerate'),
+        options: getVideoFramerateOptions(t),
         value: 'original',
       })
     );
     content.push(
       sigma.ui.select({
         id: 'videoResolution',
-        label: 'Resolution',
-        options: VIDEO_RESOLUTION_OPTIONS,
+        label: t('resolution'),
+        options: getVideoResolutionOptions(t),
         value: 'original',
       })
     );
     content.push(
       sigma.ui.select({
         id: 'videoAudio',
-        label: 'Audio',
-        options: VIDEO_AUDIO_OPTIONS,
+        label: t('audio'),
+        options: getVideoAudioOptions(t),
         value: 'keep',
       })
     );
@@ -561,44 +584,44 @@ function buildVideoFormatContent(videoFormat, videoFiles, imageFiles) {
   return content;
 }
 
-function buildModalContent(videoFormat, videoFiles, imageFiles) {
+function buildModalContent(videoFormat, videoFiles, imageFiles, t) {
   const hasVideos = videoFiles.length > 0;
   const hasImages = imageFiles.length > 0;
   const content = [];
 
-  content.push(sigma.ui.text(buildSummaryText(videoFiles, imageFiles)));
+  content.push(sigma.ui.text(buildSummaryText(videoFiles, imageFiles, t)));
   content.push(sigma.ui.separator());
 
   if (hasVideos) {
-    content.push(...buildVideoFormatContent(videoFormat, videoFiles, imageFiles));
+    content.push(...buildVideoFormatContent(videoFormat, videoFiles, imageFiles, t));
   }
 
   if (hasImages) {
     if (hasVideos) {
       content.push(sigma.ui.separator());
-      content.push(sigma.ui.text(`Image files (${imageFiles.length})`));
+      content.push(sigma.ui.text(t('imageFiles', { count: imageFiles.length })));
     }
     content.push(
       sigma.ui.select({
         id: 'imageFormat',
-        label: 'Output format',
-        options: IMAGE_OUTPUT_FORMATS,
+        label: t('outputFormat'),
+        options: getImageOutputFormats(t),
         value: 'webp',
       })
     );
     content.push(
       sigma.ui.select({
         id: 'imageQuality',
-        label: 'Quality',
-        options: IMAGE_QUALITY_OPTIONS,
+        label: t('quality'),
+        options: getImageQualityOptions(t),
         value: '90',
       })
     );
     content.push(
       sigma.ui.select({
         id: 'imageResize',
-        label: 'Resize',
-        options: IMAGE_RESIZE_OPTIONS,
+        label: t('resize'),
+        options: getImageResizeOptions(t),
         value: 'original',
       })
     );
@@ -608,7 +631,7 @@ function buildModalContent(videoFormat, videoFiles, imageFiles) {
   content.push(
     sigma.ui.checkbox({
       id: 'includeParams',
-      label: 'Include parameters in filename (example: photo-q90-@0.75.webp)',
+      label: t('includeParams'),
       checked: false,
     })
   );
@@ -617,24 +640,25 @@ function buildModalContent(videoFormat, videoFiles, imageFiles) {
 }
 
 function createConvertModal(videoFiles, imageFiles) {
+  const t = getT();
   const hasVideos = videoFiles.length > 0;
   const initialVideoFormat = 'mp4';
-  const content = buildModalContent(initialVideoFormat, videoFiles, imageFiles);
+  const content = buildModalContent(initialVideoFormat, videoFiles, imageFiles, t);
 
   return new Promise((resolve) => {
     const modal = sigma.ui.createModal({
-      title: 'Convert',
+      title: t('title'),
       width: 600,
       content,
       buttons: [
-        { id: 'convert', label: 'Convert', variant: 'primary', shortcut: { key: 'Enter' } },
+        { id: 'convert', label: t('convert'), variant: 'primary', shortcut: { key: 'Enter' } },
       ],
     });
 
     if (hasVideos) {
       modal.onValueChange((elementId, value) => {
         if (elementId === 'videoFormat') {
-          const newContent = buildModalContent(String(value), videoFiles, imageFiles);
+          const newContent = buildModalContent(String(value), videoFiles, imageFiles, t);
           modal.setContent(newContent);
         }
       });
@@ -672,7 +696,7 @@ function parseFfmpegProgress(line) {
   };
 }
 
-function formatProgressMessage(info, fileName) {
+function formatProgressMessage(info, fileName, t) {
   const parts = [];
 
   if (info.time) {
@@ -687,13 +711,13 @@ function formatProgressMessage(info, fileName) {
     parts.push(info.speed);
   }
 
-  const progressDetail = parts.length > 0 ? parts.join(' \u2022 ') : 'Processing...';
+  const progressDetail = parts.length > 0 ? parts.join(' \u2022 ') : t('processing');
   return `${fileName}: ${progressDetail}`;
 }
 
 // --- File conversion ---
 
-async function convertSingleFile(ffmpegPath, inputPath, ffmpegArgs, progressCallback, cancellationToken) {
+async function convertSingleFile(ffmpegPath, inputPath, ffmpegArgs, progressCallback, cancellationToken, t) {
   let lastUpdateTime = 0;
   const UPDATE_INTERVAL = 200;
   const lastSep = findLastSeparatorIndex(inputPath);
@@ -712,7 +736,7 @@ async function convertSingleFile(ffmpegPath, inputPath, ffmpegArgs, progressCall
 
       const progressInfo = parseFfmpegProgress(line);
       if (progressInfo && progressCallback) {
-        progressCallback(formatProgressMessage(progressInfo, fileName));
+        progressCallback(formatProgressMessage(progressInfo, fileName, t));
       }
     }
   );
@@ -742,12 +766,14 @@ async function convertSingleFile(ffmpegPath, inputPath, ffmpegArgs, progressCall
 // --- Main command handler ---
 
 async function handleConvertCommand(entries) {
+  const t = getT();
+
   if (!entries || entries.length === 0) {
     const selectedEntries = sigma.context.getSelectedEntries();
     if (!selectedEntries || selectedEntries.length === 0) {
       sigma.ui.showNotification({
-        title: 'Media Converter',
-        subtitle: 'No files selected. Select files to convert.',
+        title: t('extensionTitle'),
+        subtitle: t('noFilesSelected'),
         type: 'warning',
       });
       return;
@@ -760,10 +786,9 @@ async function handleConvertCommand(entries) {
 
   if (totalSupported === 0) {
     sigma.ui.showNotification({
-      title: 'Media Converter',
-      subtitle: 'No supported media files in selection.',
-      description: 'Supported formats: ' +
-        [...VIDEO_EXTENSIONS, ...IMAGE_EXTENSIONS].join(', '),
+      title: t('extensionTitle'),
+      subtitle: t('noSupportedFiles'),
+      description: t('supportedFormats') + [...VIDEO_EXTENSIONS, ...IMAGE_EXTENSIONS].join(', '),
       type: 'warning',
     });
     return;
@@ -774,8 +799,8 @@ async function handleConvertCommand(entries) {
     ffmpegPath = await ensureFfmpegInstalled();
   } catch (installError) {
     sigma.ui.showNotification({
-      title: 'Media Converter',
-      subtitle: installError.message || 'Failed to install FFmpeg',
+      title: t('extensionTitle'),
+      subtitle: installError.message || t('failedInstallFfmpeg'),
       type: 'error',
     });
     return;
@@ -826,7 +851,7 @@ async function handleConvertCommand(entries) {
 
   const progressResult = await sigma.ui.withProgress(
     {
-      subtitle: 'Converting',
+      subtitle: t('converting'),
       location: 'notification',
       cancellable: true,
     },
@@ -845,7 +870,7 @@ async function handleConvertCommand(entries) {
         const { file, type } = allFiles[fileIndex];
         const fileName = file.name;
         const fileLabel = isBatch
-          ? `File ${fileIndex + 1} of ${allFiles.length}\n${fileName}`
+          ? t('fileNOfTotal', { n: fileIndex + 1, total: allFiles.length }) + '\n' + fileName
           : fileName;
 
         progress.report({
@@ -891,11 +916,12 @@ async function handleConvertCommand(entries) {
             ffmpegArgs,
             (ffmpegMessage) => {
               const label = isBatch
-                ? `File ${fileIndex + 1} of ${allFiles.length}\n${ffmpegMessage}`
+                ? t('fileNOfTotal', { n: fileIndex + 1, total: allFiles.length }) + '\n' + ffmpegMessage
                 : ffmpegMessage;
               progress.report({ description: label, increment: 0 });
             },
-            token
+            token,
+            t
           );
 
           if (result.cancelled) {
@@ -917,12 +943,12 @@ async function handleConvertCommand(entries) {
 
       if (!wasCancelled) {
         const doneMessage = failedCount > 0
-          ? `${failedCount} failed`
+          ? t('nFailed', { n: failedCount })
           : isBatch
-            ? `${successCount} files`
+            ? t('nFiles', { n: successCount })
             : allFiles[0].file.name;
         progress.report({
-          subtitle: 'Converted',
+          subtitle: t('converted'),
           description: doneMessage,
           increment: 100,
         });
@@ -936,16 +962,17 @@ async function handleConvertCommand(entries) {
 
   if (cancelled) {
     sigma.ui.showNotification({
-      title: 'Media Converter',
-      subtitle: `Converted ${successCount} of ${totalSupported} files before cancellation`,
+      title: t('extensionTitle'),
+      subtitle: t('convertedBeforeCancel', { count: successCount, total: totalSupported }),
       type: 'info',
     });
   } else if (failedCount > 0) {
+    const subtitle = failedCount === allFiles.length
+      ? (failedCount === 1 ? t('failedConvert', { name: failedFiles[0] }) : t('failedConvertAll', { count: failedCount }))
+      : t('convertedPartial', { success: successCount, total: successCount + failedCount, failed: failedCount });
     sigma.ui.showNotification({
-      title: 'Media Converter',
-      subtitle: failedCount === allFiles.length
-        ? (failedCount === 1 ? `Failed to convert ${failedFiles[0]}` : `Failed to convert all ${failedCount} files`)
-        : `Converted ${successCount} of ${successCount + failedCount} files. ${failedCount} failed.`,
+      title: t('extensionTitle'),
+      subtitle,
       type: 'error',
     });
   }
@@ -973,13 +1000,14 @@ async function performStartupActivation() {
 }
 
 async function handleInstallActivation() {
+  const t = getT();
   try {
     await ensureFfmpegInstalled();
     await ensureFfprobeAvailable();
   } catch (error) {
     sigma.ui.showNotification({
-      title: 'Media Converter',
-      subtitle: error.message || 'Failed to set up Media Converter',
+      title: t('extensionTitle'),
+      subtitle: error.message || t('failedSetup'),
       type: 'error',
     });
   }
@@ -999,15 +1027,18 @@ async function handleUninstallActivation() {
  * @param {ExtensionActivationContext} context
  */
 async function activate(context) {
+  await sigma.i18n.mergeFromPath('locales');
+
+  const t = getT();
   sigma.commands.registerCommand(
-    { id: 'convert', title: 'Convert selected media files' },
+    { id: 'convert', title: t('commandTitle') },
     async () => handleConvertCommand(null)
   );
 
   sigma.contextMenu.registerItem(
     {
       id: 'convert',
-      title: 'Convert',
+      title: t('convert'),
       icon: 'RefreshCw',
       group: 'extensions',
       order: 1,
