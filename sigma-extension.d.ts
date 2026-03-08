@@ -172,7 +172,7 @@ export interface ExtensionManifest {
   banner?: string;
   categories?: string[];
   tags?: string[];
-  type: ExtensionType;
+  extensionType: ExtensionType;
   main: string;
   permissions: ExtensionPermission[];
   activationEvents?: ExtensionActivationEvent[];
@@ -197,7 +197,8 @@ export interface ContextMenuContext {
 
 export interface NotificationOptions {
   title: string;
-  message: string;
+  subtitle?: string;
+  description?: string;
   type?: 'info' | 'success' | 'warning' | 'error';
   duration?: number;
 }
@@ -219,13 +220,14 @@ export interface DialogResult {
 export type ProgressLocation = 'notification' | 'statusBar';
 
 export interface ProgressOptions {
-  title: string;
+  subtitle: string;
   location?: ProgressLocation;
   cancellable?: boolean;
 }
 
 export interface ProgressReport {
-  message?: string;
+  subtitle?: string;
+  description?: string;
   increment?: number;
 }
 
@@ -318,10 +320,16 @@ export interface UIElement {
   disabled?: boolean;
 }
 
+export interface KeyboardShortcut {
+  key: string;
+  modifiers?: ('ctrl' | 'shift' | 'alt' | 'meta')[];
+}
+
 export interface ModalButton {
   id: string;
   label: string;
   variant?: 'primary' | 'secondary' | 'danger';
+  shortcut?: KeyboardShortcut;
 }
 
 export interface ModalOptions {
@@ -334,8 +342,10 @@ export interface ModalOptions {
 export interface ModalHandle {
   onSubmit(callback: (values: Record<string, unknown>, buttonId: string) => void): void;
   onClose(callback: () => void): void;
+  onValueChange(callback: (elementId: string, value: unknown, allValues: Record<string, unknown>) => void): void;
   close(): void;
   updateElement(id: string, updates: Partial<UIElement>): void;
+  setContent(content: UIElement[]): void;
   getValues(): Record<string, unknown>;
 }
 

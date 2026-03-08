@@ -70,5 +70,4 @@ png, jpg, jpeg, webp, bmp, tiff, tif, avif, gif
 
 ## Requirements
 
-- Sigma File Manager v2.0.0 or later
 - FFmpeg is automatically downloaded and managed by the extension

@@ -469,27 +469,48 @@ function buildSummaryText(videoFiles, imageFiles) {
   return `${files[0].name} ${moreLabel}`;
 }
 
-function createConvertModal(videoFiles, imageFiles) {
-  const hasVideos = videoFiles.length > 0;
+function buildVideoFormatContent(videoFormat, videoFiles, imageFiles) {
   const hasImages = imageFiles.length > 0;
-
   const content = [];
 
-  content.push(sigma.ui.text(buildSummaryText(videoFiles, imageFiles)));
-  content.push(sigma.ui.separator());
+  if (hasImages) {
+    content.push(sigma.ui.text(`Video files (${videoFiles.length})`));
+  }
 
-  if (hasVideos) {
-    if (hasImages) {
-      content.push(sigma.ui.text(`Video files (${videoFiles.length})`));
-    }
+  content.push(
+    sigma.ui.select({
+      id: 'videoFormat',
+      label: 'Output format',
+      options: VIDEO_OUTPUT_FORMATS,
+      value: videoFormat,
+    })
+  );
+
+  if (videoFormat === 'gif') {
     content.push(
       sigma.ui.select({
-        id: 'videoFormat',
-        label: 'Output format',
-        options: VIDEO_OUTPUT_FORMATS,
-        value: 'mp4',
+        id: 'videoFramerate',
+        label: 'Framerate',
+        options: VIDEO_FRAMERATE_OPTIONS,
+        value: 'original',
       })
     );
+    content.push(
+      sigma.ui.select({
+        id: 'gifWidth',
+        label: 'GIF width',
+        options: GIF_WIDTH_OPTIONS,
+        value: 'original',
+      })
+    );
+    content.push(
+      sigma.ui.checkbox({
+        id: 'gifHighQuality',
+        label: 'High quality GIF palette',
+        checked: true,
+      })
+    );
+  } else {
     content.push(
       sigma.ui.select({
         id: 'videoCodecMode',
@@ -530,21 +551,21 @@ function createConvertModal(videoFiles, imageFiles) {
         value: 'keep',
       })
     );
-    content.push(
-      sigma.ui.select({
-        id: 'gifWidth',
-        label: 'GIF width (only for GIF output)',
-        options: GIF_WIDTH_OPTIONS,
-        value: '480',
-      })
-    );
-    content.push(
-      sigma.ui.checkbox({
-        id: 'gifHighQuality',
-        label: 'High quality GIF palette (only for GIF output)',
-        checked: true,
-      })
-    );
+  }
+
+  return content;
+}
+
+function buildModalContent(videoFormat, videoFiles, imageFiles) {
+  const hasVideos = videoFiles.length > 0;
+  const hasImages = imageFiles.length > 0;
+  const content = [];
+
+  content.push(sigma.ui.text(buildSummaryText(videoFiles, imageFiles)));
+  content.push(sigma.ui.separator());
+
+  if (hasVideos) {
+    content.push(...buildVideoFormatContent(videoFormat, videoFiles, imageFiles));
   }
 
   if (hasImages) {
@@ -587,15 +608,32 @@ function createConvertModal(videoFiles, imageFiles) {
     })
   );
 
+  return content;
+}
+
+function createConvertModal(videoFiles, imageFiles) {
+  const hasVideos = videoFiles.length > 0;
+  const initialVideoFormat = 'mp4';
+  const content = buildModalContent(initialVideoFormat, videoFiles, imageFiles);
+
   return new Promise((resolve) => {
     const modal = sigma.ui.createModal({
       title: 'Convert',
       width: 600,
       content,
       buttons: [
-        { id: 'convert', label: 'Convert', variant: 'primary' },
+        { id: 'convert', label: 'Convert', variant: 'primary', shortcut: { key: 'Enter' } },
       ],
     });
+
+    if (hasVideos) {
+      modal.onValueChange((elementId, value) => {
+        if (elementId === 'videoFormat') {
+          const newContent = buildModalContent(String(value), videoFiles, imageFiles);
+          modal.setContent(newContent);
+        }
+      });
+    }
 
     modal.onSubmit((values) => {
       resolve(values);
@@ -704,7 +742,7 @@ async function handleConvertCommand(entries) {
     if (!selectedEntries || selectedEntries.length === 0) {
       sigma.ui.showNotification({
         title: 'Media Converter',
-        message: 'No files selected. Select files to convert.',
+        subtitle: 'No files selected. Select files to convert.',
         type: 'warning',
       });
       return;
@@ -718,7 +756,8 @@ async function handleConvertCommand(entries) {
   if (totalSupported === 0) {
     sigma.ui.showNotification({
       title: 'Media Converter',
-      message: 'No supported media files in selection. Supported formats: ' +
+      subtitle: 'No supported media files in selection.',
+      description: 'Supported formats: ' +
         [...VIDEO_EXTENSIONS, ...IMAGE_EXTENSIONS].join(', '),
       type: 'warning',
     });
@@ -731,7 +770,7 @@ async function handleConvertCommand(entries) {
   } catch (installError) {
     sigma.ui.showNotification({
       title: 'Media Converter',
-      message: installError.message || 'Failed to install FFmpeg',
+      subtitle: installError.message || 'Failed to install FFmpeg',
       type: 'error',
     });
     return;
@@ -749,7 +788,7 @@ async function handleConvertCommand(entries) {
     videoFramerate: String(modalResult.videoFramerate || 'original'),
     videoResolution: String(modalResult.videoResolution || 'original'),
     videoAudio: String(modalResult.videoAudio || 'keep'),
-    gifWidth: String(modalResult.gifWidth || '480'),
+    gifWidth: String(modalResult.gifWidth || 'original'),
     gifHighQuality: modalResult.gifHighQuality !== false,
   };
 
@@ -778,10 +817,11 @@ async function handleConvertCommand(entries) {
   let successCount = 0;
   let failedCount = 0;
   const failedFiles = [];
+  const isBatch = allFiles.length > 1;
 
   const progressResult = await sigma.ui.withProgress(
     {
-      title: 'Converting media',
+      subtitle: 'Converting',
       location: 'notification',
       cancellable: true,
     },
@@ -799,9 +839,12 @@ async function handleConvertCommand(entries) {
 
         const { file, type } = allFiles[fileIndex];
         const fileName = file.name;
+        const fileLabel = isBatch
+          ? `File ${fileIndex + 1} of ${allFiles.length}\n${fileName}`
+          : fileName;
 
         progress.report({
-          message: `Converting file ${fileIndex + 1} of ${allFiles.length}: ${fileName}`,
+          description: fileLabel,
           increment: fileIndex === 0 ? 0 : (100 / allFiles.length),
         });
 
@@ -841,8 +884,11 @@ async function handleConvertCommand(entries) {
             ffmpegPath,
             file.path,
             ffmpegArgs,
-            (message) => {
-              progress.report({ message, increment: 0 });
+            (ffmpegMessage) => {
+              const label = isBatch
+                ? `File ${fileIndex + 1} of ${allFiles.length}\n${ffmpegMessage}`
+                : ffmpegMessage;
+              progress.report({ description: label, increment: 0 });
             },
             token
           );
@@ -865,11 +911,16 @@ async function handleConvertCommand(entries) {
       }
 
       if (!wasCancelled) {
+        const doneMessage = failedCount > 0
+          ? `${failedCount} failed`
+          : isBatch
+            ? `${successCount} files`
+            : allFiles[0].file.name;
         progress.report({
-          message: 'Conversion complete',
+          subtitle: 'Converted',
+          description: doneMessage,
           increment: 100,
         });
-        await sleep(1000);
       }
 
       return { successCount, failedCount, failedFiles, cancelled: wasCancelled };
@@ -877,35 +928,20 @@ async function handleConvertCommand(entries) {
   );
 
   const { cancelled } = progressResult;
-  const totalProcessed = successCount + failedCount;
 
   if (cancelled) {
     sigma.ui.showNotification({
       title: 'Media Converter',
-      message: `Converted ${successCount} of ${totalSupported} files before cancellation`,
+      subtitle: `Converted ${successCount} of ${totalSupported} files before cancellation`,
       type: 'info',
     });
-  } else if (failedCount === 0 && successCount > 0) {
+  } else if (failedCount > 0) {
     sigma.ui.showNotification({
       title: 'Media Converter',
-      message: successCount === 1
-        ? 'File converted successfully'
-        : `Converted ${successCount} files successfully`,
-      type: 'success',
-    });
-  } else if (successCount === 0 && failedCount > 0) {
-    sigma.ui.showNotification({
-      title: 'Media Converter',
-      message: failedCount === 1
-        ? `Conversion failed for ${failedFiles[0]}`
-        : `Conversion failed for all ${failedCount} files`,
+      subtitle: failedCount === allFiles.length
+        ? (failedCount === 1 ? `Failed to convert ${failedFiles[0]}` : `Failed to convert all ${failedCount} files`)
+        : `Converted ${successCount} of ${successCount + failedCount} files. ${failedCount} failed.`,
       type: 'error',
-    });
-  } else {
-    sigma.ui.showNotification({
-      title: 'Media Converter',
-      message: `Converted ${successCount} of ${totalProcessed} files. ${failedCount} failed.`,
-      type: 'warning',
     });
   }
 }
@@ -938,7 +974,7 @@ async function handleInstallActivation() {
   } catch (error) {
     sigma.ui.showNotification({
       title: 'Media Converter',
-      message: error.message || 'Failed to set up Media Converter',
+      subtitle: error.message || 'Failed to set up Media Converter',
       type: 'error',
     });
   }
@@ -956,7 +992,7 @@ async function handleUninstallActivation() {
 
 async function activate(context) {
   sigma.commands.registerCommand(
-    { id: 'convert', title: 'Convert media files' },
+    { id: 'convert', title: 'Convert selected media files' },
     async () => handleConvertCommand(null)
   );
 

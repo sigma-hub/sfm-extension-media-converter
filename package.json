@@ -19,8 +19,9 @@
     "ffmpeg",
     "gif"
   ],
-  "type": "api",
+  "extensionType": "api",
   "main": "index.js",
+  "icon": "icon.png",
   "permissions": [
     "contextMenu",
     "commands",
