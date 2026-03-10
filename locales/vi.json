@@ -25,7 +25,7 @@
   "audio": "Âm thanh",
   "quality": "Chất lượng",
   "resize": "Thay đổi kích thước",
-  "includeParams": "Bao gồm tham số trong tên tệp (vd: photo-q90-@0.75.webp)",
+  "includeParams": "Bao gồm tham số trong tên tệp (vd: photo-q90-{'@'}0.75.webp)",
   "keepOriginal": "Giữ nguyên bản gốc",
   "autoCopy": "Tự động (mã hóa lại)",
   "copy": "Sao chép (nhanh, không mất chất lượng)",

@@ -25,7 +25,7 @@
   "audio": "Ses",
   "quality": "Kalite",
   "resize": "Yeniden boyutlandır",
-  "includeParams": "Parametreleri dosya adına ekle (örn.: photo-q90-@0.75.webp)",
+  "includeParams": "Parametreleri dosya adına ekle (örn.: photo-q90-{'@'}0.75.webp)",
   "keepOriginal": "Orijinali koru",
   "autoCopy": "Otomatik (yeniden kodla)",
   "copy": "Kopyala (hızlı, kalite kaybı yok)",

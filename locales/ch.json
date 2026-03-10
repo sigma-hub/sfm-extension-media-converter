@@ -25,7 +25,7 @@
   "audio": "音频",
   "quality": "质量",
   "resize": "调整大小",
-  "includeParams": "在文件名中包含参数（例如：photo-q90-@0.75.webp）",
+  "includeParams": "在文件名中包含参数（例如：photo-q90-{'@'}0.75.webp）",
   "keepOriginal": "保持原样",
   "autoCopy": "自动（重新编码）",
   "copy": "复制（快速，无质量损失）",

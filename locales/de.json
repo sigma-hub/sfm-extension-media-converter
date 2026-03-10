@@ -25,7 +25,7 @@
   "audio": "Audio",
   "quality": "Qualität",
   "resize": "Größe ändern",
-  "includeParams": "Parameter in Dateiname einbeziehen (z.B.: photo-q90-@0.75.webp)",
+  "includeParams": "Parameter in Dateiname einbeziehen (z.B.: photo-q90-{'@'}0.75.webp)",
   "keepOriginal": "Original behalten",
   "autoCopy": "Auto (neu kodieren)",
   "copy": "Kopieren (schnell, kein Qualitätsverlust)",

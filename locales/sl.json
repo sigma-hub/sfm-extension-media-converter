@@ -25,7 +25,7 @@
   "audio": "Avdio",
   "quality": "Kakovost",
   "resize": "Spremeni velikost",
-  "includeParams": "Vključi parametre v ime datoteke (npr.: photo-q90-@0.75.webp)",
+  "includeParams": "Vključi parametre v ime datoteke (npr.: photo-q90-{'@'}0.75.webp)",
   "keepOriginal": "Ohrani izvirnik",
   "autoCopy": "Avto (ponovno kodiraj)",
   "copy": "Kopiraj (hitro, brez izgube kakovosti)",

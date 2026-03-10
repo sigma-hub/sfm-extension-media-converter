@@ -25,7 +25,7 @@
   "audio": "音声",
   "quality": "品質",
   "resize": "リサイズ",
-  "includeParams": "ファイル名にパラメータを含める（例: photo-q90-@0.75.webp）",
+  "includeParams": "ファイル名にパラメータを含める（例: photo-q90-{'@'}0.75.webp）",
   "keepOriginal": "元のまま",
   "autoCopy": "自動（再エンコード）",
   "copy": "コピー（高速、劣化なし）",
