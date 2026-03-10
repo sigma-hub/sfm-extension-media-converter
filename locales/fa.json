@@ -86,5 +86,8 @@
   "nFailed": "{n} ناموفق",
   "nFiles": "{n} پرونده",
   "extensionTitle": "Media Converter",
+  "settings.title": "تنظیمات Media Converter",
+  "settings.autoUpdateBinary": "به‌روزرسانی خودکار FFmpeg",
+  "settings.autoUpdateBinaryDescription": "بررسی و دانلود به‌روزرسانی‌های FFmpeg در زمان اجرا",
   "commandTitle": "تبدیل پرونده‌های رسانه‌ای انتخاب‌شده"
 }

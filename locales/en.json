@@ -86,5 +86,9 @@
   "nFailed": "{n} failed",
   "nFiles": "{n} files",
   "extensionTitle": "Media Converter",
-  "commandTitle": "Convert selected media files"
+  "commandTitle": "Convert selected media files",
+  "settings.title": "Media Converter Settings",
+  "settings.description": "Convert videos and images to other formats using FFmpeg",
+  "settings.autoUpdateBinary": "Auto-update binary",
+  "settings.autoUpdateBinaryDescription": "Automatically check for and download FFmpeg updates on app startup"
 }

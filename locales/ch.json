@@ -86,5 +86,8 @@
   "nFailed": "{n} 个失败",
   "nFiles": "{n} 个文件",
   "extensionTitle": "Media Converter",
+  "settings.title": "Media Converter 设置",
+  "settings.autoUpdateBinary": "自动更新 FFmpeg",
+  "settings.autoUpdateBinaryDescription": "启动时自动检查并下载 FFmpeg 更新",
   "commandTitle": "转换所选媒体文件"
 }

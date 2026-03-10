@@ -86,5 +86,8 @@
   "nFailed": "{n} non riusciti",
   "nFiles": "{n} file",
   "extensionTitle": "Media Converter",
+  "settings.title": "Impostazioni Media Converter",
+  "settings.autoUpdateBinary": "Aggiornamento automatico FFmpeg",
+  "settings.autoUpdateBinaryDescription": "Controlla e scarica aggiornamenti FFmpeg all'avvio",
   "commandTitle": "Converti i file multimediali selezionati"
 }

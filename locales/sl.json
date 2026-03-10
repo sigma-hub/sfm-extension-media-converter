@@ -86,5 +86,8 @@
   "nFailed": "{n} ni uspelo",
   "nFiles": "{n} datotek",
   "extensionTitle": "Media Converter",
+  "settings.title": "Nastavitve Media Converter",
+  "settings.autoUpdateBinary": "Samodejna posodobitev FFmpeg",
+  "settings.autoUpdateBinaryDescription": "Ob zagonu preveri in prenese posodobitve FFmpeg",
   "commandTitle": "Pretvori izbrane predstavnostne datoteke"
 }

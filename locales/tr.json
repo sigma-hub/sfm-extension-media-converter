@@ -86,5 +86,8 @@
   "nFailed": "{n} başarısız",
   "nFiles": "{n} dosya",
   "extensionTitle": "Media Converter",
+  "settings.title": "Media Converter Ayarları",
+  "settings.autoUpdateBinary": "FFmpeg'i otomatik güncelle",
+  "settings.autoUpdateBinaryDescription": "Başlangıçta FFmpeg güncellemelerini kontrol et ve indir",
   "commandTitle": "Seçili medya dosyalarını dönüştür"
 }

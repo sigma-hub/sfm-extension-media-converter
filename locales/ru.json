@@ -86,5 +86,9 @@
   "nFailed": "{n} не удалось",
   "nFiles": "{n} файлов",
   "extensionTitle": "Media Converter",
+  "settings.title": "Настройки Media Converter",
+  "settings.description": "Конвертация видео и изображений в другие форматы с помощью FFmpeg",
+  "settings.autoUpdateBinary": "Автообновление FFmpeg",
+  "settings.autoUpdateBinaryDescription": "Автоматически проверять и загружать обновления FFmpeg при запуске",
   "commandTitle": "Конвертировать выбранные медиафайлы"
 }
