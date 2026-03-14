@@ -11,8 +11,120 @@ let cachedFfprobeBinaryPath = null;
 const VIDEO_EXTENSIONS = ['mp4', 'mkv', 'webm', 'avi', 'mov', 'wmv', 'flv', 'ts', 'mts', 'm4v', '3gp'];
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tiff', 'tif', 'avif', 'gif'];
 
+const extensionMessages = {
+  title: 'Convert',
+  convert: 'Convert',
+  converting: 'Converting',
+  converted: 'Converted',
+  processing: 'Processing...',
+  noFilesSelected: 'No files selected. Select files to convert.',
+  noSupportedFiles: 'No supported media files in selection.',
+  supportedFormats: 'Supported formats: ',
+  failedInstallFfmpeg: 'Failed to install FFmpeg',
+  failedSetup: 'Failed to set up Media Converter',
+  convertedBeforeCancel: 'Converted {count} of {total} files before cancellation',
+  failedConvert: 'Failed to convert {name}',
+  failedConvertAll: 'Failed to convert all {count} files',
+  convertedPartial: 'Converted {success} of {total} files. {failed} failed.',
+  videoFiles: 'Video files ({count})',
+  imageFiles: 'Image files ({count})',
+  outputFormat: 'Output format',
+  framerate: 'Framerate',
+  gifWidth: 'GIF width',
+  gifHighQuality: 'High quality GIF palette',
+  codecMode: 'Codec mode',
+  videoQuality: 'Video quality',
+  resolution: 'Resolution',
+  audio: 'Audio',
+  quality: 'Quality',
+  resize: 'Resize',
+  includeParams: "Include parameters in filename (example: photo-q90-{'@'}0.75.webp)",
+  keepOriginal: 'Keep original',
+  autoCopy: 'Auto (re-encode)',
+  copy: 'Copy (fast, no quality loss)',
+  highCrf18: 'High (CRF 18)',
+  mediumCrf23: 'Medium (CRF 23)',
+  lowCrf28: 'Low (CRF 28)',
+  lossless: 'Lossless (CRF 0)',
+  fps60: '60 fps',
+  fps30: '30 fps',
+  fps24: '24 fps',
+  fps15: '15 fps',
+  fps10: '10 fps',
+  fps10Label: '10 fps',
+  keepAudio: 'Keep audio',
+  removeAudio: 'Remove audio',
+  copyAudio: 'Copy audio stream',
+  width640: '640px',
+  width480: '480px',
+  width320: '320px',
+  width240: '240px',
+  width1920: '1920px wide',
+  width1280: '1280px wide',
+  width800: '800px wide',
+  scale75: '75%',
+  scale50: '50%',
+  scale25: '25%',
+  highest100: 'Highest (100)',
+  high90: 'High (90)',
+  medium75: 'Medium (75)',
+  low50: 'Low (50)',
+  oneVideo: '1 video',
+  nVideos: '{n} videos',
+  oneImage: '1 image',
+  nImages: '{n} images',
+  andOneMoreVideo: 'and 1 more video',
+  andNMoreVideos: 'and {n} more videos',
+  andOneMoreImage: 'and 1 more image',
+  andNMoreImages: 'and {n} more images',
+  video: 'video',
+  image: 'image',
+  res1080p: '1080p',
+  res720p: '720p',
+  res480p: '480p',
+  res360p: '360p',
+  formatMp4: 'MP4',
+  formatMkv: 'MKV',
+  formatWebm: 'WebM',
+  formatAvi: 'AVI',
+  formatMov: 'MOV',
+  formatGif: 'GIF',
+  formatPng: 'PNG',
+  formatJpg: 'JPG',
+  formatWebp: 'WebP',
+  formatAvif: 'AVIF',
+  formatBmp: 'BMP',
+  formatTiff: 'TIFF',
+  fileNOfTotal: 'File {n} of {total}',
+  nFailed: '{n} failed',
+  nFiles: '{n} files',
+  extensionTitle: 'Media Converter',
+  commandTitle: 'Convert selected media files',
+  'settings.title': 'Media Converter Settings',
+  'settings.description': 'Convert videos and images to other formats using FFmpeg',
+  'settings.autoUpdateBinary': 'Auto-update binary',
+  'settings.autoUpdateBinaryDescription': 'Automatically check for and download FFmpeg updates on app startup',
+};
+
+function formatMessage(template, params) {
+  if (!params) {
+    return template;
+  }
+
+  return String(template).replace(/\{(\w+)\}/g, (fullMatch, paramKey) => {
+    return Object.prototype.hasOwnProperty.call(params, paramKey)
+      ? String(params[paramKey])
+      : fullMatch;
+  });
+}
+
 function getT() {
-  return (key, params) => sigma?.i18n?.extensionT?.(key, params) ?? key;
+  return (key, params) => {
+    const translated = sigma.i18n.extensionT(key, params);
+    return translated === `extensions.sigma.media-converter.${key}`
+      ? formatMessage(extensionMessages[key] ?? key, params)
+      : translated;
+  };
 }
 
 function getVideoOutputFormats(t) {
@@ -113,35 +225,20 @@ function getImageResizeOptions(t) {
   ];
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function findLastSeparatorIndex(filePath) {
-  const backslashIndex = filePath.lastIndexOf('\\');
-  const forwardSlashIndex = filePath.lastIndexOf('/');
-  return Math.max(backslashIndex, forwardSlashIndex);
-}
-
 function getFileExtension(filePath) {
-  const lastDot = filePath.lastIndexOf('.');
-  if (lastDot === -1) return '';
-  return filePath.substring(lastDot + 1).toLowerCase();
+  const ext = sigma.path.extname(filePath);
+  return ext ? ext.substring(1).toLowerCase() : '';
 }
 
 function getFileNameWithoutExtension(filePath) {
-  const lastSep = findLastSeparatorIndex(filePath);
-  const fileName = lastSep === -1 ? filePath : filePath.substring(lastSep + 1);
-  const lastDot = fileName.lastIndexOf('.');
-  if (lastDot === -1) return fileName;
-  return fileName.substring(0, lastDot);
+  const base = sigma.path.basename(filePath);
+  const ext = sigma.path.extname(base);
+  return ext ? base.substring(0, base.length - ext.length) : base;
 }
 
 function getDirectoryFromPath(filePath) {
   if (!filePath) return null;
-  const lastSep = findLastSeparatorIndex(filePath);
-  if (lastSep === -1) return null;
-  return filePath.substring(0, lastSep);
+  return sigma.path.dirname(filePath);
 }
 
 function classifyFiles(entries) {
@@ -305,8 +402,7 @@ function buildParamSuffix(type, options) {
 }
 
 function getFileNameFromPath(filePath) {
-  const lastSep = findLastSeparatorIndex(filePath);
-  return lastSep === -1 ? filePath : filePath.substring(lastSep + 1);
+  return sigma.path.basename(filePath);
 }
 
 function buildExistingNamesSet(entries) {
@@ -720,8 +816,7 @@ function formatProgressMessage(info, fileName, t) {
 async function convertSingleFile(ffmpegPath, inputPath, ffmpegArgs, progressCallback, cancellationToken, t) {
   let lastUpdateTime = 0;
   const UPDATE_INTERVAL = 200;
-  const lastSep = findLastSeparatorIndex(inputPath);
-  const fileName = lastSep === -1 ? inputPath : inputPath.substring(lastSep + 1);
+  const fileName = sigma.path.basename(inputPath);
 
   const commandTask = await sigma.shell.runWithProgress(
     ffmpegPath,
@@ -746,13 +841,19 @@ async function convertSingleFile(ffmpegPath, inputPath, ffmpegArgs, progressCall
   if (cancellationRequested) {
     try {
       await commandTask.cancel();
-    } catch {}
+    } catch (cancelError) {
+      console.warn('[Media Converter] Failed to cancel ffmpeg:', cancelError);
+    }
   }
 
   if (cancellationToken) {
-    cancellationToken.onCancellationRequested(() => {
+    cancellationToken.onCancellationRequested(async () => {
       cancellationRequested = true;
-      commandTask.cancel().catch(() => {});
+      try {
+        await commandTask.cancel();
+      } catch (cancelError) {
+        console.warn('[Media Converter] Failed to cancel ffmpeg:', cancelError);
+      }
     });
   }
 
@@ -769,7 +870,7 @@ async function handleConvertCommand(entries) {
   const t = getT();
 
   if (!entries || entries.length === 0) {
-    const selectedEntries = sigma.context.getSelectedEntries();
+    const selectedEntries = await sigma.context.getSelectedEntries();
     if (!selectedEntries || selectedEntries.length === 0) {
       sigma.ui.showNotification({
         title: t('extensionTitle'),
@@ -1026,16 +1127,16 @@ async function handleUninstallActivation() {
 /**
  * @param {ExtensionActivationContext} context
  */
-async function activate(context) {
+export async function activate(context) {
   await sigma.i18n.mergeFromPath('locales');
 
   const t = getT();
-  sigma.commands.registerCommand(
+  await sigma.commands.registerCommand(
     { id: 'convert', title: t('commandTitle') },
     async () => handleConvertCommand(null)
   );
 
-  sigma.contextMenu.registerItem(
+  await sigma.contextMenu.registerItem(
     {
       id: 'convert',
       title: t('convert'),
@@ -1065,8 +1166,8 @@ async function activate(context) {
   }
 }
 
-async function deactivate() {}
-
-if (typeof module !== 'undefined') {
-  module.exports = { activate, deactivate };
+export async function deactivate() {
+  cachedFfmpegBinaryPath = null;
+  cachedFfprobeBinaryPath = null;
+  startupActivationPromise = null;
 }
