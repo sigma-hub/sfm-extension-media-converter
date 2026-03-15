@@ -297,12 +297,18 @@ function getFfmpegExecutable() {
   if (sigma.platform.isWindows) {
     return 'bin/ffmpeg.exe';
   }
+  if (sigma.platform.isLinux) {
+    return 'bin/ffmpeg';
+  }
   return 'ffmpeg';
 }
 
 function getFfprobeExecutable() {
   if (sigma.platform.isWindows) {
     return 'bin/ffprobe.exe';
+  }
+  if (sigma.platform.isLinux) {
+    return 'bin/ffprobe';
   }
   return 'ffprobe';
 }
