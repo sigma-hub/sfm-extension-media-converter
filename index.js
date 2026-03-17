@@ -42,10 +42,12 @@ const extensionMessages = {
   keepOriginal: 'Keep original',
   autoCopy: 'Auto (re-encode)',
   copy: 'Copy (fast, no quality loss)',
-  highCrf18: 'High (CRF 18)',
-  mediumCrf23: 'Medium (CRF 23)',
-  lowCrf28: 'Low (CRF 28)',
+  visuallyLossless: 'Visually lossless (CRF 18)',
+  highCrf23: 'High (CRF 23)',
+  midCrf28: 'Mid (CRF 28)',
+  lowCrf35: 'Low (CRF 35)',
   lossless: 'Lossless (CRF 0)',
+  losslessWarning: 'Lossless video takes up a lot of disk space and is not recommended for most cases.',
   fps60: '60 fps',
   fps30: '30 fps',
   fps24: '24 fps',
@@ -147,10 +149,11 @@ function getVideoCodecModes(t) {
 
 function getVideoQualityOptions(t) {
   return [
-    { value: '18', label: t('highCrf18') },
-    { value: '23', label: t('mediumCrf23') },
-    { value: '28', label: t('lowCrf28') },
     { value: '0', label: t('lossless') },
+    { value: '18', label: t('visuallyLossless') },
+    { value: '23', label: t('highCrf23') },
+    { value: '28', label: t('midCrf28') },
+    { value: '35', label: t('lowCrf35') },
   ];
 }
 
@@ -486,9 +489,9 @@ function buildVideoArgs(inputPath, outputPath, options) {
     args.push('-c:v', codec);
 
     if (codec === 'libvpx-vp9') {
-      args.push('-b:v', '0', '-crf', options.videoQuality || '23');
+      args.push('-b:v', '0', '-crf', options.videoQuality || '18');
     } else {
-      args.push('-crf', options.videoQuality || '23');
+      args.push('-crf', options.videoQuality || '18');
       args.push('-preset', 'medium');
     }
 
@@ -602,7 +605,7 @@ function buildSummaryText(videoFiles, imageFiles, t) {
   return `${files[0].name} ${moreLabel}`;
 }
 
-function buildVideoFormatContent(videoFormat, videoCodecMode, videoFiles, imageFiles, t) {
+function buildVideoFormatContent(videoFormat, videoCodecMode, videoFiles, imageFiles, t, videoQuality) {
   const hasImages = imageFiles.length > 0;
   const content = [];
 
@@ -659,9 +662,17 @@ function buildVideoFormatContent(videoFormat, videoCodecMode, videoFiles, imageF
           id: 'videoQuality',
           label: t('videoQuality'),
           options: getVideoQualityOptions(t),
-          value: '23',
+          value: '18',
         })
       );
+      if (videoQuality === '0') {
+        content.push(
+          sigma.ui.alert({
+            title: t('losslessWarning'),
+            tone: 'warning',
+          })
+        );
+      }
       content.push(
         sigma.ui.select({
           id: 'videoFramerate',
@@ -693,7 +704,7 @@ function buildVideoFormatContent(videoFormat, videoCodecMode, videoFiles, imageF
   return content;
 }
 
-function buildModalContent(videoFormat, videoCodecMode, videoFiles, imageFiles, t) {
+function buildModalContent(videoFormat, videoCodecMode, videoFiles, imageFiles, t, videoQuality) {
   const hasVideos = videoFiles.length > 0;
   const hasImages = imageFiles.length > 0;
   const content = [];
@@ -702,7 +713,7 @@ function buildModalContent(videoFormat, videoCodecMode, videoFiles, imageFiles, 
   content.push(sigma.ui.separator());
 
   if (hasVideos) {
-    content.push(...buildVideoFormatContent(videoFormat, videoCodecMode, videoFiles, imageFiles, t));
+    content.push(...buildVideoFormatContent(videoFormat, videoCodecMode, videoFiles, imageFiles, t, videoQuality ?? '18'));
   }
 
   if (hasImages) {
@@ -753,7 +764,7 @@ function createConvertModal(videoFiles, imageFiles) {
   const hasVideos = videoFiles.length > 0;
   let currentVideoFormat = 'mp4';
   let currentVideoCodecMode = 'auto';
-  const content = buildModalContent(currentVideoFormat, currentVideoCodecMode, videoFiles, imageFiles, t);
+  const content = buildModalContent(currentVideoFormat, currentVideoCodecMode, videoFiles, imageFiles, t, '18');
 
   return new Promise((resolve) => {
     const modal = sigma.ui.createModal({
@@ -767,14 +778,19 @@ function createConvertModal(videoFiles, imageFiles) {
 
     if (hasVideos) {
       modal.onValueChange((elementId, value) => {
+        const currentValues = modal.getValues();
+        const videoQuality = String(currentValues.videoQuality ?? value ?? '18');
         if (elementId === 'videoFormat') {
           currentVideoFormat = String(value);
           currentVideoCodecMode = 'auto';
-          const newContent = buildModalContent(currentVideoFormat, currentVideoCodecMode, videoFiles, imageFiles, t);
+          const newContent = buildModalContent(currentVideoFormat, currentVideoCodecMode, videoFiles, imageFiles, t, videoQuality);
           modal.setContent(newContent);
         } else if (elementId === 'videoCodecMode') {
           currentVideoCodecMode = String(value);
-          const newContent = buildModalContent(currentVideoFormat, currentVideoCodecMode, videoFiles, imageFiles, t);
+          const newContent = buildModalContent(currentVideoFormat, currentVideoCodecMode, videoFiles, imageFiles, t, videoQuality);
+          modal.setContent(newContent);
+        } else if (elementId === 'videoQuality') {
+          const newContent = buildModalContent(currentVideoFormat, currentVideoCodecMode, videoFiles, imageFiles, t, String(value));
           modal.setContent(newContent);
         }
       });
@@ -935,7 +951,7 @@ async function handleConvertCommand(entries) {
   const videoOptions = {
     videoFormat: String(modalResult.videoFormat || 'mp4'),
     videoCodecMode: String(modalResult.videoCodecMode || 'auto'),
-    videoQuality: String(modalResult.videoQuality || '23'),
+    videoQuality: String(modalResult.videoQuality || '18'),
     videoFramerate: String(modalResult.videoFramerate || 'original'),
     videoResolution: String(modalResult.videoResolution || 'original'),
     videoAudio: String(modalResult.videoAudio || 'keep'),
