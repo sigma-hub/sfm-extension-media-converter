@@ -599,7 +599,7 @@ function buildSummaryText(videoFiles, imageFiles, t) {
   return `${files[0].name} ${moreLabel}`;
 }
 
-function buildVideoFormatContent(videoFormat, videoFiles, imageFiles, t) {
+function buildVideoFormatContent(videoFormat, videoCodecMode, videoFiles, imageFiles, t) {
   const hasImages = imageFiles.length > 0;
   const content = [];
 
@@ -646,47 +646,50 @@ function buildVideoFormatContent(videoFormat, videoFiles, imageFiles, t) {
         id: 'videoCodecMode',
         label: t('codecMode'),
         options: getVideoCodecModes(t),
-        value: 'auto',
+        value: videoCodecMode,
       })
     );
-    content.push(
-      sigma.ui.select({
-        id: 'videoQuality',
-        label: t('videoQuality'),
-        options: getVideoQualityOptions(t),
-        value: '23',
-      })
-    );
-    content.push(
-      sigma.ui.select({
-        id: 'videoFramerate',
-        label: t('framerate'),
-        options: getVideoFramerateOptions(t),
-        value: 'original',
-      })
-    );
-    content.push(
-      sigma.ui.select({
-        id: 'videoResolution',
-        label: t('resolution'),
-        options: getVideoResolutionOptions(t),
-        value: 'original',
-      })
-    );
-    content.push(
-      sigma.ui.select({
-        id: 'videoAudio',
-        label: t('audio'),
-        options: getVideoAudioOptions(t),
-        value: 'keep',
-      })
-    );
+
+    if (videoCodecMode !== 'copy') {
+      content.push(
+        sigma.ui.select({
+          id: 'videoQuality',
+          label: t('videoQuality'),
+          options: getVideoQualityOptions(t),
+          value: '23',
+        })
+      );
+      content.push(
+        sigma.ui.select({
+          id: 'videoFramerate',
+          label: t('framerate'),
+          options: getVideoFramerateOptions(t),
+          value: 'original',
+        })
+      );
+      content.push(
+        sigma.ui.select({
+          id: 'videoResolution',
+          label: t('resolution'),
+          options: getVideoResolutionOptions(t),
+          value: 'original',
+        })
+      );
+      content.push(
+        sigma.ui.select({
+          id: 'videoAudio',
+          label: t('audio'),
+          options: getVideoAudioOptions(t),
+          value: 'keep',
+        })
+      );
+    }
   }
 
   return content;
 }
 
-function buildModalContent(videoFormat, videoFiles, imageFiles, t) {
+function buildModalContent(videoFormat, videoCodecMode, videoFiles, imageFiles, t) {
   const hasVideos = videoFiles.length > 0;
   const hasImages = imageFiles.length > 0;
   const content = [];
@@ -695,7 +698,7 @@ function buildModalContent(videoFormat, videoFiles, imageFiles, t) {
   content.push(sigma.ui.separator());
 
   if (hasVideos) {
-    content.push(...buildVideoFormatContent(videoFormat, videoFiles, imageFiles, t));
+    content.push(...buildVideoFormatContent(videoFormat, videoCodecMode, videoFiles, imageFiles, t));
   }
 
   if (hasImages) {
@@ -744,8 +747,9 @@ function buildModalContent(videoFormat, videoFiles, imageFiles, t) {
 function createConvertModal(videoFiles, imageFiles) {
   const t = getT();
   const hasVideos = videoFiles.length > 0;
-  const initialVideoFormat = 'mp4';
-  const content = buildModalContent(initialVideoFormat, videoFiles, imageFiles, t);
+  let currentVideoFormat = 'mp4';
+  let currentVideoCodecMode = 'auto';
+  const content = buildModalContent(currentVideoFormat, currentVideoCodecMode, videoFiles, imageFiles, t);
 
   return new Promise((resolve) => {
     const modal = sigma.ui.createModal({
@@ -760,7 +764,13 @@ function createConvertModal(videoFiles, imageFiles) {
     if (hasVideos) {
       modal.onValueChange((elementId, value) => {
         if (elementId === 'videoFormat') {
-          const newContent = buildModalContent(String(value), videoFiles, imageFiles, t);
+          currentVideoFormat = String(value);
+          currentVideoCodecMode = 'auto';
+          const newContent = buildModalContent(currentVideoFormat, currentVideoCodecMode, videoFiles, imageFiles, t);
+          modal.setContent(newContent);
+        } else if (elementId === 'videoCodecMode') {
+          currentVideoCodecMode = String(value);
+          const newContent = buildModalContent(currentVideoFormat, currentVideoCodecMode, videoFiles, imageFiles, t);
           modal.setContent(newContent);
         }
       });
