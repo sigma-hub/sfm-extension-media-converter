@@ -380,6 +380,9 @@ function buildParamSuffix(type, options) {
       }
     } else if (options.videoCodecMode === 'copy') {
       parts.push('copy');
+      if (options.videoAudio === 'remove') {
+        parts.push('noaudio');
+      }
     } else {
       parts.push(`crf${options.videoQuality}`);
       if (options.videoFramerate !== 'original') {
@@ -477,7 +480,7 @@ function buildVideoArgs(inputPath, outputPath, options) {
   const args = ['-y', '-hide_banner', '-loglevel', 'info', '-i', inputPath];
 
   if (options.videoCodecMode === 'copy') {
-    args.push('-c', 'copy');
+    args.push('-c:v', 'copy');
   } else {
     const codec = getVideoCodecForFormat(options.videoFormat);
     args.push('-c:v', codec);
@@ -496,15 +499,15 @@ function buildVideoArgs(inputPath, outputPath, options) {
     if (options.videoResolution && options.videoResolution !== 'original') {
       args.push('-vf', `scale=-2:${options.videoResolution}`);
     }
+  }
 
-    if (options.videoAudio === 'remove') {
-      args.push('-an');
-    } else if (options.videoAudio === 'copy') {
-      args.push('-c:a', 'copy');
-    } else {
-      const audioCodec = getAudioCodecForFormat(options.videoFormat);
-      args.push('-c:a', audioCodec);
-    }
+  if (options.videoAudio === 'remove') {
+    args.push('-an');
+  } else if (options.videoAudio === 'copy' || options.videoCodecMode === 'copy') {
+    args.push('-c:a', 'copy');
+  } else {
+    const audioCodec = getAudioCodecForFormat(options.videoFormat);
+    args.push('-c:a', audioCodec);
   }
 
   args.push(outputPath);
@@ -675,15 +678,16 @@ function buildVideoFormatContent(videoFormat, videoCodecMode, videoFiles, imageF
           value: 'original',
         })
       );
-      content.push(
-        sigma.ui.select({
-          id: 'videoAudio',
-          label: t('audio'),
-          options: getVideoAudioOptions(t),
-          value: 'keep',
-        })
-      );
     }
+
+    content.push(
+      sigma.ui.select({
+        id: 'videoAudio',
+        label: t('audio'),
+        options: getVideoAudioOptions(t),
+        value: 'keep',
+      })
+    );
   }
 
   return content;
