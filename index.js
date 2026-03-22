@@ -1510,7 +1510,7 @@ export async function activate(context) {
   );
 
   await sigma.commands.registerCommand(
-    { id: 'reduceSize', title: t('reduceSizeCommandTitle') },
+    { id: 'reduceSize', title: t('reduceSizeCommandTitle'), icon: 'ImageDown' },
     async () => handleReduceSizeCommand(null)
   );
 
@@ -1535,7 +1535,7 @@ export async function activate(context) {
     {
       id: 'reduceSize',
       title: t('reduceSize'),
-      icon: 'Minimize2',
+      icon: 'ImageDown',
       group: 'extensions',
       order: 2,
       when: {
