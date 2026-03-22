@@ -92,5 +92,13 @@
   "settings.description": "Конвертация видео и изображений в другие форматы с помощью FFmpeg",
   "settings.autoUpdateBinary": "Автообновление FFmpeg",
   "settings.autoUpdateBinaryDescription": "Автоматически проверять и загружать обновления FFmpeg при запуске",
-  "commandTitle": "Конвертировать выбранные медиафайлы"
+  "commandTitle": "Конвертировать выбранные медиафайлы",
+  "reduceSize": "Уменьшить размер",
+  "reduceSizeCommandTitle": "Уменьшить размер выбранных медиафайлов",
+  "reducingSize": "Уменьшение размера файла...",
+  "reduceSizeDone": "Размер уменьшен",
+  "failedReduce": "Не удалось уменьшить {name}",
+  "failedReduceAll": "Не удалось уменьшить размер {count} файлов",
+  "reduceSizeLargerHint": "Новый файл больше исходного ({name}). Вы можете удалить копию, если она не нужна.",
+  "reduceSizeManyLargerHint": "{count} новых файлов больше исходных. Вы можете удалить эти копии, если они не нужны."
 }

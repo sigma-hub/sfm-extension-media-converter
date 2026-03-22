@@ -91,5 +91,13 @@
   "settings.title": "Media Converter 设置",
   "settings.autoUpdateBinary": "自动更新 FFmpeg",
   "settings.autoUpdateBinaryDescription": "启动时自动检查并下载 FFmpeg 更新",
-  "commandTitle": "转换所选媒体文件"
+  "commandTitle": "转换所选媒体文件",
+  "reduceSize": "减小体积",
+  "reduceSizeCommandTitle": "减小所选媒体文件的体积",
+  "reducingSize": "正在减小文件体积...",
+  "reduceSizeDone": "已减小体积",
+  "failedReduce": "无法减小 {name}",
+  "failedReduceAll": "无法减小全部 {count} 个文件",
+  "reduceSizeLargerHint": "新文件比原文件更大（{name}）。如不需要可删除副本。",
+  "reduceSizeManyLargerHint": "有 {count} 个新文件比原文件更大。如不需要可删除这些副本。"
 }

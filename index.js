@@ -102,6 +102,14 @@ const extensionMessages = {
   nFiles: '{n} files',
   extensionTitle: 'Media Converter',
   commandTitle: 'Convert selected media files',
+  reduceSize: 'Reduce size',
+  reduceSizeCommandTitle: 'Reduce size of selected media files',
+  reducingSize: 'Reducing file size...',
+  reduceSizeDone: 'Reduced size',
+  failedReduce: 'Failed to reduce {name}',
+  failedReduceAll: 'Failed to reduce all {count} files',
+  reduceSizeLargerHint: 'The new file is larger than the original ({name}). You can delete the copy if you do not need it.',
+  reduceSizeManyLargerHint: '{count} new files are larger than the originals. You can delete those copies if you do not need them.',
   'settings.title': 'Media Converter Settings',
   'settings.description': 'Convert videos and images to other formats using FFmpeg',
   'settings.autoUpdateBinary': 'Auto-update binary',
@@ -417,18 +425,32 @@ function getFileNameFromPath(filePath) {
   return sigma.path.basename(filePath);
 }
 
+function normalizeOutputNameKey(fileName) {
+  return sigma.platform.isWindows ? fileName.toLowerCase() : fileName;
+}
+
 function buildExistingNamesSet(entries) {
   const nameSet = new Set();
   for (const entry of entries) {
     const fileName = entry.name || getFileNameFromPath(entry.path);
-    nameSet.add(sigma.platform.isWindows ? fileName.toLowerCase() : fileName);
+    nameSet.add(normalizeOutputNameKey(fileName));
   }
   return nameSet;
 }
 
+async function buildExistingNamesSetForDirectory(directoryPath, fallbackEntries) {
+  try {
+    const directoryEntries = await sigma.fs.readDir(directoryPath);
+    return buildExistingNamesSet(directoryEntries);
+  } catch (readDirectoryError) {
+    console.warn('[Media Converter] Could not read directory entries:', readDirectoryError);
+    return buildExistingNamesSet(fallbackEntries || []);
+  }
+}
+
 function resolveOutputFileName(baseName, extension, existingNamesSet) {
   const candidate = `${baseName}.${extension}`;
-  const candidateKey = sigma.platform.isWindows ? candidate.toLowerCase() : candidate;
+  const candidateKey = normalizeOutputNameKey(candidate);
 
   if (!existingNamesSet.has(candidateKey)) {
     existingNamesSet.add(candidateKey);
@@ -437,7 +459,7 @@ function resolveOutputFileName(baseName, extension, existingNamesSet) {
 
   for (let counter = 1; counter <= 999; counter++) {
     const numbered = `${baseName} (${counter}).${extension}`;
-    const numberedKey = sigma.platform.isWindows ? numbered.toLowerCase() : numbered;
+    const numberedKey = normalizeOutputNameKey(numbered);
     if (!existingNamesSet.has(numberedKey)) {
       existingNamesSet.add(numberedKey);
       return numbered;
@@ -445,7 +467,7 @@ function resolveOutputFileName(baseName, extension, existingNamesSet) {
   }
 
   const fallback = `${baseName} (${Date.now()}).${extension}`;
-  existingNamesSet.add(sigma.platform.isWindows ? fallback.toLowerCase() : fallback);
+  existingNamesSet.add(normalizeOutputNameKey(fallback));
   return fallback;
 }
 
@@ -527,13 +549,13 @@ function buildGifArgs(inputPath, outputPath, options) {
     : '-1';
 
   const scaleFilter = `fps=${fps},scale=${widthPart}:-1:flags=lanczos`;
+  const paletteFilter = `${scaleFilter},split[s0][s1];[s0]palettegen=max_colors=256:stats_mode=diff[p];[s1][p]paletteuse=dither=floyd_steinberg`;
 
   if (options.gifHighQuality !== false) {
-    const filterComplex = `${scaleFilter},split[s0][s1];[s0]palettegen=max_colors=256:stats_mode=diff[p];[s1][p]paletteuse=dither=floyd_steinberg`;
     return [
       '-y', '-hide_banner', '-loglevel', 'info',
       '-i', inputPath,
-      '-filter_complex', filterComplex,
+      '-filter_complex', paletteFilter,
       outputPath,
     ];
   }
@@ -578,6 +600,115 @@ function buildImageArgs(inputPath, outputPath, options) {
 
   args.push(outputPath);
   return args;
+}
+
+function insertStripMetadataBeforeOutput(ffmpegArgs) {
+  if (ffmpegArgs.length < 2) return ffmpegArgs;
+  const outputPath = ffmpegArgs[ffmpegArgs.length - 1];
+  const rest = ffmpegArgs.slice(0, -1);
+  return [...rest, '-map_metadata', '-1', outputPath];
+}
+
+function getReduceVideoOutputExtension(normalizedExtension) {
+  const ext = normalizedExtension.toLowerCase();
+  if (ext === 'wmv' || ext === 'flv' || ext === '3gp') {
+    return 'mp4';
+  }
+  return ext;
+}
+
+function getReduceImageOutputExtension(normalizedExtension) {
+  const ext = normalizedExtension.toLowerCase();
+  if (ext === 'bmp' || ext === 'tif' || ext === 'tiff') {
+    return 'png';
+  }
+  return ext;
+}
+
+function mapExtensionToVideoFormatForReduce(outputExtension) {
+  const ext = outputExtension.toLowerCase();
+  if (ext === 'm4v' || ext === '3gp') return 'mp4';
+  if (['mp4', 'mkv', 'webm', 'avi', 'mov'].includes(ext)) return ext;
+  return 'mp4';
+}
+
+function buildReduceVideoArgs(inputPath, outputPath, normalizedExtension) {
+  const ext = normalizedExtension.toLowerCase();
+
+  if (ext === 'ts' || ext === 'mts') {
+    return insertStripMetadataBeforeOutput([
+      '-y', '-hide_banner', '-loglevel', 'info', '-i', inputPath,
+      '-c:v', 'libx264', '-crf', '22', '-preset', 'slow',
+      '-c:a', 'aac', '-b:a', '160k',
+      outputPath,
+    ]);
+  }
+
+  const outputExt = getReduceVideoOutputExtension(ext);
+  const videoFormat = mapExtensionToVideoFormatForReduce(outputExt);
+  const videoQuality = videoFormat === 'webm' ? '28' : '22';
+
+  const baseArgs = buildVideoArgs(inputPath, outputPath, {
+    videoFormat,
+    videoCodecMode: 'auto',
+    videoQuality,
+    videoFramerate: 'original',
+    videoResolution: 'original',
+    videoAudio: 'keep',
+    gifWidth: 'original',
+    gifHighQuality: true,
+  });
+
+  return insertStripMetadataBeforeOutput(baseArgs);
+}
+
+function buildReduceImageArgs(inputPath, outputPath, normalizedExtension) {
+  const outputExt = getReduceImageOutputExtension(normalizedExtension.toLowerCase());
+  const args = ['-y', '-hide_banner', '-loglevel', 'info', '-i', inputPath];
+
+  if (outputExt === 'png') {
+    args.push('-c:v', 'png', '-compression_level', '9', '-pred', 'mixed');
+  } else if (outputExt === 'jpg' || outputExt === 'jpeg') {
+    args.push('-q:v', '3');
+  } else if (outputExt === 'webp') {
+    args.push('-c:v', 'libwebp', '-preset', 'picture', '-quality', '84');
+  } else if (outputExt === 'avif') {
+    args.push('-c:v', 'libaom-av1', '-still-picture', '1', '-crf', '26');
+  } else if (outputExt === 'gif') {
+    args.push(
+      '-filter_complex',
+      'split[s0][s1];[s0]palettegen=max_colors=256:stats_mode=diff[p];[s1][p]paletteuse=dither=floyd_steinberg'
+    );
+  } else {
+    args.push('-q:v', '3');
+  }
+
+  args.push('-map_metadata', '-1', outputPath);
+  return args;
+}
+
+async function getFileSizeBytesByPath(filePath) {
+  const directory = getDirectoryFromPath(filePath);
+  const baseName = getFileNameFromPath(filePath);
+  if (!directory) return null;
+  try {
+    const entries = await sigma.fs.readDir(directory);
+    const expectedNameKey = normalizeOutputNameKey(baseName);
+    const match = entries.find((entry) => normalizeOutputNameKey(entry.name) === expectedNameKey);
+    if (match && typeof match.size === 'number') {
+      return match.size;
+    }
+  } catch (sizeError) {
+    console.warn('[Media Converter] Could not read file size:', sizeError);
+  }
+  return null;
+}
+
+function getEntryInputSizeBytes(entry) {
+  if (typeof entry.size === 'number' && entry.size >= 0) {
+    return entry.size;
+  }
+  return null;
 }
 
 // --- Modal creation ---
@@ -975,8 +1106,9 @@ async function handleConvertCommand(entries) {
   for (const { file } of allFiles) {
     const dirPath = getDirectoryFromPath(file.path);
     if (dirPath && !existingNamesSets[dirPath]) {
-      existingNamesSets[dirPath] = buildExistingNamesSet(
-        entries.filter(entry => getDirectoryFromPath(entry.path) === dirPath)
+      existingNamesSets[dirPath] = await buildExistingNamesSetForDirectory(
+        dirPath,
+        entries.filter((entry) => getDirectoryFromPath(entry.path) === dirPath)
       );
     }
   }
@@ -1115,6 +1247,211 @@ async function handleConvertCommand(entries) {
   }
 }
 
+async function handleReduceSizeCommand(entries) {
+  const t = getT();
+
+  if (!entries || entries.length === 0) {
+    const selectedEntries = await sigma.context.getSelectedEntries();
+    if (!selectedEntries || selectedEntries.length === 0) {
+      sigma.ui.showNotification({
+        title: t('extensionTitle'),
+        subtitle: t('noFilesSelected'),
+        type: 'warning',
+      });
+      return;
+    }
+    entries = selectedEntries;
+  }
+
+  const { videoFiles, imageFiles } = classifyFiles(entries);
+  const totalSupported = videoFiles.length + imageFiles.length;
+
+  if (totalSupported === 0) {
+    sigma.ui.showNotification({
+      title: t('extensionTitle'),
+      subtitle: t('noSupportedFiles'),
+      description: t('supportedFormats') + [...VIDEO_EXTENSIONS, ...IMAGE_EXTENSIONS].join(', '),
+      type: 'warning',
+    });
+    return;
+  }
+
+  let ffmpegPath;
+  try {
+    ffmpegPath = await ensureFfmpegInstalled();
+  } catch (installError) {
+    sigma.ui.showNotification({
+      title: t('extensionTitle'),
+      subtitle: installError.message || t('failedInstallFfmpeg'),
+      type: 'error',
+    });
+    return;
+  }
+
+  const allFiles = [
+    ...videoFiles.map((file) => ({ file, type: 'video' })),
+    ...imageFiles.map((file) => ({ file, type: 'image' })),
+  ];
+
+  const existingNamesSets = {};
+
+  for (const { file } of allFiles) {
+    const dirPath = getDirectoryFromPath(file.path);
+    if (dirPath && !existingNamesSets[dirPath]) {
+      existingNamesSets[dirPath] = await buildExistingNamesSetForDirectory(
+        dirPath,
+        entries.filter((entry) => getDirectoryFromPath(entry.path) === dirPath)
+      );
+    }
+  }
+
+  let successCount = 0;
+  let failedCount = 0;
+  const failedFiles = [];
+  let largerThanOriginalCount = 0;
+  const isBatch = allFiles.length > 1;
+
+  const progressResult = await sigma.ui.withProgress(
+    {
+      subtitle: t('reducingSize'),
+      location: 'notification',
+      cancellable: true,
+    },
+    async (progress, token) => {
+      let wasCancelled = false;
+
+      token.onCancellationRequested(() => {
+        wasCancelled = true;
+      });
+
+      for (let fileIndex = 0; fileIndex < allFiles.length; fileIndex++) {
+        if (token.isCancellationRequested || wasCancelled) {
+          break;
+        }
+
+        const { file, type } = allFiles[fileIndex];
+        const fileName = file.name;
+        const fileLabel = isBatch
+          ? t('fileNOfTotal', { n: fileIndex + 1, total: allFiles.length }) + '\n' + fileName
+          : fileName;
+
+        progress.report({
+          description: fileLabel,
+          increment: fileIndex === 0 ? 0 : (100 / allFiles.length),
+        });
+
+        try {
+          const dirPath = getDirectoryFromPath(file.path);
+          const separator = detectSeparator(file.path);
+          const baseName = getFileNameWithoutExtension(file.path);
+          const existingNames = existingNamesSets[dirPath] || new Set();
+          const extension = (file.extension || getFileExtension(file.path)).toLowerCase().replace(/^\./, '');
+          const outputExtension = type === 'video'
+            ? getReduceVideoOutputExtension(extension)
+            : getReduceImageOutputExtension(extension);
+
+          const outputFileName = resolveOutputFileName(
+            `${baseName} - reduced`,
+            outputExtension,
+            existingNames
+          );
+          const outputPath = `${dirPath}${separator}${outputFileName}`;
+
+          const ffmpegArgs = type === 'video'
+            ? buildReduceVideoArgs(file.path, outputPath, extension)
+            : buildReduceImageArgs(file.path, outputPath, extension);
+
+          const result = await convertSingleFile(
+            ffmpegPath,
+            file.path,
+            ffmpegArgs,
+            (ffmpegMessage) => {
+              const label = isBatch
+                ? t('fileNOfTotal', { n: fileIndex + 1, total: allFiles.length }) + '\n' + ffmpegMessage
+                : ffmpegMessage;
+              progress.report({ description: label, increment: 0 });
+            },
+            token,
+            t
+          );
+
+          if (result.cancelled) {
+            wasCancelled = true;
+            break;
+          } else if (result.code === 0) {
+            successCount++;
+            const inputSizeBytes = getEntryInputSizeBytes(file);
+            const outputSizeBytes = await getFileSizeBytesByPath(outputPath);
+            if (
+              inputSizeBytes !== null
+              && outputSizeBytes !== null
+              && outputSizeBytes >= inputSizeBytes
+            ) {
+              largerThanOriginalCount++;
+            }
+          } else {
+            failedCount++;
+            failedFiles.push(fileName);
+            console.error(`[Media Converter] Failed to reduce ${fileName}:`, result.stderr);
+          }
+        } catch (reduceError) {
+          failedCount++;
+          failedFiles.push(fileName);
+          console.error(`[Media Converter] Error reducing ${fileName}:`, reduceError);
+        }
+      }
+
+      if (!wasCancelled) {
+        const doneMessage = failedCount > 0
+          ? t('nFailed', { n: failedCount })
+          : isBatch
+            ? t('nFiles', { n: successCount })
+            : allFiles[0].file.name;
+        progress.report({
+          subtitle: t('reduceSizeDone'),
+          description: doneMessage,
+          increment: 100,
+        });
+      }
+
+      return {
+        successCount,
+        failedCount,
+        failedFiles,
+        cancelled: wasCancelled,
+        largerThanOriginalCount,
+      };
+    }
+  );
+
+  const { cancelled, largerThanOriginalCount: largerCount } = progressResult;
+
+  if (cancelled) {
+    sigma.ui.showNotification({
+      title: t('extensionTitle'),
+      subtitle: t('convertedBeforeCancel', { count: successCount, total: totalSupported }),
+      type: 'info',
+    });
+  } else if (failedCount > 0) {
+    const subtitle = failedCount === allFiles.length
+      ? (failedCount === 1 ? t('failedReduce', { name: failedFiles[0] }) : t('failedReduceAll', { count: failedCount }))
+      : t('convertedPartial', { success: successCount, total: successCount + failedCount, failed: failedCount });
+    sigma.ui.showNotification({
+      title: t('extensionTitle'),
+      subtitle,
+      type: 'error',
+    });
+  } else if (largerCount > 0) {
+    sigma.ui.showNotification({
+      title: t('extensionTitle'),
+      subtitle: !isBatch && largerCount === 1
+        ? t('reduceSizeLargerHint', { name: allFiles[0].file.name })
+        : t('reduceSizeManyLargerHint', { count: largerCount }),
+      type: 'warning',
+    });
+  }
+}
+
 // --- Activation lifecycle ---
 
 let startupActivationPromise = null;
@@ -1172,6 +1509,11 @@ export async function activate(context) {
     async () => handleConvertCommand(null)
   );
 
+  await sigma.commands.registerCommand(
+    { id: 'reduceSize', title: t('reduceSizeCommandTitle') },
+    async () => handleReduceSizeCommand(null)
+  );
+
   await sigma.contextMenu.registerItem(
     {
       id: 'convert',
@@ -1186,6 +1528,23 @@ export async function activate(context) {
     },
     async (menuContext) => {
       await handleConvertCommand(menuContext.selectedEntries);
+    }
+  );
+
+  await sigma.contextMenu.registerItem(
+    {
+      id: 'reduceSize',
+      title: t('reduceSize'),
+      icon: 'Minimize2',
+      group: 'extensions',
+      order: 2,
+      when: {
+        entryType: 'file',
+        fileExtensions: [...VIDEO_EXTENSIONS, ...IMAGE_EXTENSIONS],
+      },
+    },
+    async (menuContext) => {
+      await handleReduceSizeCommand(menuContext.selectedEntries);
     }
   );
 

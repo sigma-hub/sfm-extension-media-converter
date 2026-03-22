@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/aleksey-hoffman/sigma-file-manager/main/packages/api/manifest.schema.json",
   "id": "sigma.media-converter",
   "name": "Media Converter",
-  "version": "1.0.9",
+  "version": "1.0.11",
   "publisher": {
     "name": "sigma-hub",
     "url": "https://github.com/sigma-hub"
@@ -17,7 +17,9 @@
     "image",
     "convert",
     "ffmpeg",
-    "gif"
+    "gif",
+    "compress",
+    "optimize"
   ],
   "extensionType": "api",
   "main": "index.js",
@@ -37,7 +39,8 @@
     "onUpdate",
     "onEnable",
     "onDisable",
-    "onCommand:sigma.media-converter.convert"
+    "onCommand:sigma.media-converter.convert",
+    "onCommand:sigma.media-converter.reduceSize"
   ],
   "contributes": {
     "configuration": {
@@ -55,6 +58,11 @@
         "id": "convert",
         "title": "Convert Media",
         "description": "Convert videos and images to other formats using FFmpeg"
+      },
+      {
+        "id": "reduceSize",
+        "title": "Reduce Media Size",
+        "description": "Re-encode media to shrink files with minimal visible quality loss"
       }
     ],
     "contextMenu": [
@@ -64,6 +72,38 @@
         "icon": "RefreshCw",
         "group": "extensions",
         "order": 1,
+        "when": {
+          "entryType": "file",
+          "fileExtensions": [
+            "mp4",
+            "mkv",
+            "webm",
+            "avi",
+            "mov",
+            "wmv",
+            "flv",
+            "ts",
+            "mts",
+            "m4v",
+            "3gp",
+            "png",
+            "jpg",
+            "jpeg",
+            "webp",
+            "bmp",
+            "tiff",
+            "tif",
+            "avif",
+            "gif"
+          ]
+        }
+      },
+      {
+        "id": "reduceSize",
+        "title": "Reduce size",
+        "icon": "Minimize2",
+        "group": "extensions",
+        "order": 2,
         "when": {
           "entryType": "file",
           "fileExtensions": [

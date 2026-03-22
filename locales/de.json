@@ -91,5 +91,13 @@
   "settings.title": "Media Converter Einstellungen",
   "settings.autoUpdateBinary": "FFmpeg automatisch aktualisieren",
   "settings.autoUpdateBinaryDescription": "Automatisch FFmpeg-Updates beim Start prüfen und herunterladen",
-  "commandTitle": "Ausgewählte Mediendateien konvertieren"
+  "commandTitle": "Ausgewählte Mediendateien konvertieren",
+  "reduceSize": "Größe reduzieren",
+  "reduceSizeCommandTitle": "Größe der ausgewählten Mediendateien reduzieren",
+  "reducingSize": "Dateigröße wird reduziert...",
+  "reduceSizeDone": "Größe reduziert",
+  "failedReduce": "Reduzierung von {name} fehlgeschlagen",
+  "failedReduceAll": "Reduzierung aller {count} Dateien fehlgeschlagen",
+  "reduceSizeLargerHint": "Die neue Datei ist größer als das Original ({name}). Sie können die Kopie löschen, wenn Sie sie nicht benötigen.",
+  "reduceSizeManyLargerHint": "{count} neue Dateien sind größer als die Originale. Sie können diese Kopien löschen, wenn Sie sie nicht benötigen."
 }

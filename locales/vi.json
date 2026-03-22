@@ -91,5 +91,13 @@
   "settings.title": "Cài đặt Media Converter",
   "settings.autoUpdateBinary": "Tự động cập nhật FFmpeg",
   "settings.autoUpdateBinaryDescription": "Tự động kiểm tra và tải cập nhật FFmpeg khi khởi động",
-  "commandTitle": "Chuyển đổi các tệp phương tiện đã chọn"
+  "commandTitle": "Chuyển đổi các tệp phương tiện đã chọn",
+  "reduceSize": "Giảm dung lượng",
+  "reduceSizeCommandTitle": "Giảm dung lượng các tệp phương tiện đã chọn",
+  "reducingSize": "Đang giảm dung lượng tệp...",
+  "reduceSizeDone": "Đã giảm dung lượng",
+  "failedReduce": "Không thể giảm {name}",
+  "failedReduceAll": "Không thể giảm cả {count} tệp",
+  "reduceSizeLargerHint": "Tệp mới lớn hơn tệp gốc ({name}). Bạn có thể xóa bản sao nếu không cần.",
+  "reduceSizeManyLargerHint": "{count} tệp mới lớn hơn bản gốc. Bạn có thể xóa các bản sao đó nếu không cần."
 }

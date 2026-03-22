@@ -91,5 +91,13 @@
   "settings.title": "Media Converter Ayarları",
   "settings.autoUpdateBinary": "FFmpeg'i otomatik güncelle",
   "settings.autoUpdateBinaryDescription": "Başlangıçta FFmpeg güncellemelerini kontrol et ve indir",
-  "commandTitle": "Seçili medya dosyalarını dönüştür"
+  "commandTitle": "Seçili medya dosyalarını dönüştür",
+  "reduceSize": "Boyutu küçült",
+  "reduceSizeCommandTitle": "Seçili medya dosyalarının boyutunu küçült",
+  "reducingSize": "Dosya boyutu küçültülüyor...",
+  "reduceSizeDone": "Boyut küçültüldü",
+  "failedReduce": "{name} küçültülemedi",
+  "failedReduceAll": "Tüm {count} dosya küçültülemedi",
+  "reduceSizeLargerHint": "Yeni dosya orijinalden ({name}) büyük. Gerekmiyorsa kopyayı silebilirsiniz.",
+  "reduceSizeManyLargerHint": "{count} yeni dosya orijinallerden büyük. Gerekmiyorsa bu kopyaları silebilirsiniz."
 }

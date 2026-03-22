@@ -91,5 +91,13 @@
   "settings.title": "Nastavitve Media Converter",
   "settings.autoUpdateBinary": "Samodejna posodobitev FFmpeg",
   "settings.autoUpdateBinaryDescription": "Ob zagonu preveri in prenese posodobitve FFmpeg",
-  "commandTitle": "Pretvori izbrane predstavnostne datoteke"
+  "commandTitle": "Pretvori izbrane predstavnostne datoteke",
+  "reduceSize": "Zmanjšaj velikost",
+  "reduceSizeCommandTitle": "Zmanjšaj velikost izbranih predstavnostnih datotek",
+  "reducingSize": "Zmanjševanje velikosti datoteke ...",
+  "reduceSizeDone": "Velikost zmanjšana",
+  "failedReduce": "Zmanjšanje {name} ni uspelo",
+  "failedReduceAll": "Zmanjšanje vseh {count} datotek ni uspelo",
+  "reduceSizeLargerHint": "Nova datoteka je večja od izvirnika ({name}). Kopijo lahko izbrišete, če je ne potrebujete.",
+  "reduceSizeManyLargerHint": "{count} novih datotek je večjih od izvirnikov. Te kopije lahko izbrišete, če jih ne potrebujete."
 }

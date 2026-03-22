@@ -91,5 +91,13 @@
   "settings.title": "Media Converter の設定",
   "settings.autoUpdateBinary": "FFmpeg を自動更新",
   "settings.autoUpdateBinaryDescription": "起動時に FFmpeg の更新を確認してダウンロード",
-  "commandTitle": "選択したメディアファイルを変換"
+  "commandTitle": "選択したメディアファイルを変換",
+  "reduceSize": "サイズを縮小",
+  "reduceSizeCommandTitle": "選択したメディアファイルのサイズを縮小",
+  "reducingSize": "ファイルサイズを縮小しています...",
+  "reduceSizeDone": "サイズを縮小しました",
+  "failedReduce": "{name} の縮小に失敗しました",
+  "failedReduceAll": "すべての {count} 件の縮小に失敗しました",
+  "reduceSizeLargerHint": "新しいファイルは元より大きいです（{name}）。不要ならコピーを削除できます。",
+  "reduceSizeManyLargerHint": "{count} 件の新しいファイルが元より大きいです。不要ならそれらのコピーを削除できます。"
 }

@@ -91,5 +91,13 @@
   "settings.title": "تنظیمات Media Converter",
   "settings.autoUpdateBinary": "به‌روزرسانی خودکار FFmpeg",
   "settings.autoUpdateBinaryDescription": "بررسی و دانلود به‌روزرسانی‌های FFmpeg در زمان اجرا",
-  "commandTitle": "تبدیل پرونده‌های رسانه‌ای انتخاب‌شده"
+  "commandTitle": "تبدیل پرونده‌های رسانه‌ای انتخاب‌شده",
+  "reduceSize": "کاهش حجم",
+  "reduceSizeCommandTitle": "کاهش حجم پرونده‌های رسانه‌ای انتخاب‌شده",
+  "reducingSize": "در حال کاهش حجم پرونده...",
+  "reduceSizeDone": "حجم کاهش یافت",
+  "failedReduce": "کاهش حجم {name} ناموفق بود",
+  "failedReduceAll": "کاهش حجم همهٔ {count} پرونده ناموفق بود",
+  "reduceSizeLargerHint": "پروندهٔ جدید از اصلی ({name}) بزرگ‌تر است. در صورت عدم نیاز می‌توانید رونوشت را حذف کنید.",
+  "reduceSizeManyLargerHint": "{count} پروندهٔ جدید از اصلی‌ها بزرگ‌ترند. در صورت عدم نیاز می‌توانید آن رونوشت‌ها را حذف کنید."
 }
