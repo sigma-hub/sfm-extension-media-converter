@@ -1,5 +1,6 @@
 const t = sigma.i18n.extensionT;
 const FFMPEG_BINARY_ID = 'ffmpeg';
+const FFPROBE_BINARY_ID = 'ffprobe';
 let cachedFfmpegBinaryPath = null;
 let cachedFfprobeBinaryPath = null;
 const VIDEO_EXTENSIONS = ['mp4', 'mkv', 'webm', 'avi', 'mov', 'wmv', 'flv', 'ts', 'mts', 'm4v', '3gp'];
@@ -137,12 +138,33 @@ async function ensureFfmpegInstalled() {
         throw new Error(`FFmpeg binary is unavailable for ${sigma.platform.os} ${sigma.platform.arch}`);
     }
     cachedFfmpegBinaryPath = ffmpegPath;
-    cachedFfprobeBinaryPath = ffmpegPath.replace(/ffmpeg(\.exe)?$/i, `ffprobe${sigma.platform.isWindows ? '.exe' : ''}`);
+    if (!sigma.platform.isMacos) {
+        cachedFfprobeBinaryPath = ffmpegPath.replace(/ffmpeg(\.exe)?$/i, `ffprobe${sigma.platform.isWindows ? '.exe' : ''}`);
+        console.log('[Media Converter] ffprobe expected at:', cachedFfprobeBinaryPath);
+    }
     console.log('[Media Converter] ffmpeg available at:', ffmpegPath);
-    console.log('[Media Converter] ffprobe expected at:', cachedFfprobeBinaryPath);
     return ffmpegPath;
 }
+async function ensureFfprobeInstalledMacos() {
+    if (cachedFfprobeBinaryPath)
+        return cachedFfprobeBinaryPath;
+    const ffprobePath = await sigma.binary.getPath(FFPROBE_BINARY_ID);
+    if (!ffprobePath) {
+        throw new Error(`FFprobe binary is unavailable for ${sigma.platform.os} ${sigma.platform.arch}`);
+    }
+    cachedFfprobeBinaryPath = ffprobePath;
+    console.log('[Media Converter] ffprobe available at:', ffprobePath);
+    return ffprobePath;
+}
 async function ensureFfprobeAvailable() {
+    if (sigma.platform.isMacos) {
+        const ffprobePath = await ensureFfprobeInstalledMacos();
+        const ffprobeExists = await sigma.fs.exists(ffprobePath);
+        if (!ffprobeExists) {
+            throw new Error('ffprobe binary is missing after installation');
+        }
+        return ffprobePath;
+    }
     if (!cachedFfprobeBinaryPath) {
         await ensureFfmpegInstalled();
     }
