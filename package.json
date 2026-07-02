@@ -2,7 +2,7 @@
   "$schema": "./node_modules/@sigma-file-manager/api/manifest.schema.json",
   "id": "sigma.media-converter",
   "name": "Media Converter",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": {
     "name": "sigma-hub",
     "url": "https://github.com/sigma-hub"
@@ -49,7 +49,10 @@
     "onEnable",
     "onDisable",
     "onCommand:sigma.media-converter.convert",
-    "onCommand:sigma.media-converter.reduceSize"
+    "onCommand:sigma.media-converter.reduceSize",
+    "onCommand:sigma.media-converter.convertToGif",
+    "onCommand:sigma.media-converter.convertToWebp",
+    "onCommand:sigma.media-converter.convertToMp4Copy"
   ],
   "contributes": {
     "commands": [
@@ -63,8 +66,61 @@
         "title": "Reduce Media Size",
         "description": "Re-encode media to shrink files with minimal visible quality loss",
         "icon": "ImageDown"
+      },
+      {
+        "id": "convertToGif",
+        "title": "Convert to GIF",
+        "description": "Convert selected videos to GIF with customizable settings",
+        "icon": "Image"
+      },
+      {
+        "id": "convertToWebp",
+        "title": "Convert to WebP",
+        "description": "Convert selected images to WebP",
+        "icon": "Image"
+      },
+      {
+        "id": "convertToMp4Copy",
+        "title": "Convert to MP4 (copy)",
+        "description": "Remux selected videos to MP4 without re-encoding",
+        "icon": "Film"
       }
     ],
+    "configuration": {
+      "title": "Media Converter",
+      "properties": {
+        "defaultPreset": {
+          "type": "string",
+          "default": "lastUsed",
+          "enum": [
+            "lastUsed",
+            "custom",
+            "discordGif",
+            "webGif",
+            "archiveMp4",
+            "socialShare",
+            "webOptimized",
+            "mp4Copy"
+          ],
+          "description": "Default preset when opening the convert dialog"
+        },
+        "rememberLastUsed": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remember the last used convert settings"
+        },
+        "defaultOutputSubfolder": {
+          "type": "boolean",
+          "default": false,
+          "description": "Save converted files in a subfolder next to the source file"
+        },
+        "outputSubfolderName": {
+          "type": "string",
+          "default": "converted",
+          "description": "Name of the subfolder used when saving converted files"
+        }
+      }
+    },
     "contextMenu": [
       {
         "id": "convert",
@@ -99,11 +155,78 @@
         }
       },
       {
+        "id": "convertToGif",
+        "title": "Convert to GIF",
+        "icon": "Image",
+        "group": "extensions",
+        "order": 2,
+        "when": {
+          "entryType": "file",
+          "fileExtensions": [
+            "mp4",
+            "mkv",
+            "webm",
+            "avi",
+            "mov",
+            "wmv",
+            "flv",
+            "ts",
+            "mts",
+            "m4v",
+            "3gp"
+          ]
+        }
+      },
+      {
+        "id": "convertToWebp",
+        "title": "Convert to WebP",
+        "icon": "Image",
+        "group": "extensions",
+        "order": 3,
+        "when": {
+          "entryType": "file",
+          "fileExtensions": [
+            "png",
+            "jpg",
+            "jpeg",
+            "webp",
+            "bmp",
+            "tiff",
+            "tif",
+            "avif",
+            "gif"
+          ]
+        }
+      },
+      {
+        "id": "convertToMp4Copy",
+        "title": "Convert to MP4 (copy)",
+        "icon": "Film",
+        "group": "extensions",
+        "order": 4,
+        "when": {
+          "entryType": "file",
+          "fileExtensions": [
+            "mp4",
+            "mkv",
+            "webm",
+            "avi",
+            "mov",
+            "wmv",
+            "flv",
+            "ts",
+            "mts",
+            "m4v",
+            "3gp"
+          ]
+        }
+      },
+      {
         "id": "reduceSize",
         "title": "Reduce size",
         "icon": "ImageDown",
         "group": "extensions",
-        "order": 2,
+        "order": 5,
         "when": {
           "entryType": "file",
           "fileExtensions": [
@@ -137,11 +260,13 @@
   },
   "scripts": {
     "build": "tsc",
+    "test": "vitest run",
     "prepare": "npm run build"
   },
   "devDependencies": {
     "@sigma-file-manager/api": "^1.11.0",
-    "typescript": "~5.8.0"
+    "typescript": "~5.8.0",
+    "vitest": "^3.2.4"
   },
   "platforms": [
     "windows",
